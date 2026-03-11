@@ -1,4 +1,4 @@
-"use client"; // <--- Necesario para usar useEffect y localStorage
+"use client";
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -6,42 +6,56 @@ import CursoCard from '@/components/CursoCard';
 
 export default function Page() {
   const [cursos, setCursos] = useState([]);
+  const [nombreUsuario, setNombreUsuario] = useState('');
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Función para determinar el saludo según la hora
+  const obtenerSaludo = () => {
+    const hora = new Date().getHours();
+    if (hora >= 6 && hora < 12) return "Buenos días";
+    if (hora >= 12 && hora < 19) return "Buenas tardes";
+    return "Buenas noches";
+  };
+
   useEffect(() => {
-    // 1. Intentamos obtener el ID del usuario
     const usuarioId = localStorage.getItem('usuario_id');
 
-    // 2. Si no existe, lo mandamos al login
     if (!usuarioId) {
       router.push('/login');
       return;
     }
 
-    // 3. Pedimos los cursos asignados a ese ID a través de una API
-    const fetchCursos = async () => {
+    const cargarDatos = async () => {
       try {
-        const res = await fetch(`/api/cursos?usuario_id=${usuarioId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setCursos(data);
+        // 1. Cargamos el nombre del usuario (puedes usar la API que creamos para el Header)
+        const resUser = await fetch(`/api/usuario?id=${usuarioId}`);
+        if (resUser.ok) {
+          const userData = await resUser.json();
+          setNombreUsuario(userData.nombre.split(' ')[0]); // Solo el primer nombre
+        }
+
+        // 2. Cargamos los cursos
+        const resCursos = await fetch(`/api/cursos?usuario_id=${usuarioId}`);
+        if (resCursos.ok) {
+          const cursosData = await resCursos.json();
+          setCursos(cursosData);
         }
       } catch (error) {
-        console.error("Error al cargar cursos:", error);
+        console.error("Error al cargar datos:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCursos();
+    cargarDatos();
   }, [router]);
 
   if (loading) {
     return (
-      <div className="p-10 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-slate-500 font-medium">Cargando tus cursos de Whirlpool...</p>
+      <div className="p-10 text-center flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-slate-500 font-medium">Preparando tu panel de Whirlpool...</p>
       </div>
     );
   }
@@ -49,17 +63,31 @@ export default function Page() {
   return (
     <div className="p-10 max-w-6xl mx-auto">
       <header className="mb-10">
+        <div className="flex items-center gap-2 mb-2">
+           <span className="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+             Portal de Capacitación
+           </span>
+        </div>
+        
+        {/* Aquí está el mensaje personalizado */}
         <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-          Mis Cursos Asignados
+          {obtenerSaludo()}, {nombreUsuario || 'Empleado'}
         </h1>
-        <p className="text-slate-500 mt-2 font-medium italic">
-          Cursos personalizados según tu perfil de empleado.
+        
+        <p className="text-slate-500 mt-3 text-lg font-medium">
+          Echa un vistazo a tus cursos.
         </p>
       </header>
 
       {cursos.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl border-2 border-dashed border-slate-200 text-center">
-          <p className="text-slate-400 text-lg">No tienes cursos asignados actualmente.</p>
+        <div className="bg-white p-16 rounded-[2rem] border-2 border-dashed border-slate-200 text-center shadow-sm">
+          <div className="text-slate-300 mb-4 flex justify-center">
+            <svg size={48} fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-16 h-16">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <p className="text-slate-500 text-xl font-bold">Todo al día</p>
+          <p className="text-slate-400">No tienes cursos pendientes por ahora.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
