@@ -1,0 +1,58 @@
+import { pool } from '@/lib/db';
+import { NextResponse } from 'next/server';
+
+export async function POST(request) {
+  try {
+    const { usuario_id, curso_id, archivo_id } = await request.json();
+
+    if (!usuario_id || !curso_id || !archivo_id) {
+      return NextResponse.json({ error: 'Faltan datos' }, { status: 400 });
+    }
+
+    // 1. Registrar el archivo como visto
+    await pool.query(
+      'INSERT IGNORE INTO Archivos_Vistos (usuario_id, archivo_id) VALUES (?, ?)',
+      [usuario_id, archivo_id]
+    );
+
+    // 2. Obtener el total de archivos que tiene este curso
+    const [totalRows] = await pool.query(
+      'SELECT COUNT(*) as total FROM Archivos_Curso WHERE curso_id = ?',
+      [curso_id]
+    );
+    const totalArchivos = totalRows[0].total; // <--- AQUÍ SE DEFINE LA VARIABLE
+
+    // 3. Contar cuántos archivos distintos ha visto el usuario en este curso
+    const [vistosRows] = await pool.query(`
+      SELECT COUNT(DISTINCT av.archivo_id) as vistos
+      FROM Archivos_Vistos av
+      JOIN Archivos_Curso ac ON av.archivo_id = ac.archivo_id
+      WHERE av.usuario_id = ? AND ac.curso_id = ?`,
+      [usuario_id, curso_id]
+    );
+    const archivosVistos = vistosRows[0].vistos;
+
+    let completado = false;
+
+    // 4. Lógica de completado con la nueva tabla que incluye usuario_id
+    if (totalArchivos > 0 && archivosVistos >= totalArchivos) {
+      await pool.query(`
+        INSERT IGNORE INTO Completaciones (usuario_id, inscripcion_id, fecha_completacion)
+        SELECT ?, inscripcion_id, NOW() 
+        FROM Inscripciones 
+        WHERE usuario_id = ? AND curso_id = ?`,
+        [usuario_id, usuario_id, curso_id]
+      );
+      completado = true;
+    }
+
+    return NextResponse.json({ 
+      completado, 
+      progreso: `${archivosVistos}/${totalArchivos}` 
+    });
+
+  } catch (error) {
+    console.error("ERROR EN API PROGRESO:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

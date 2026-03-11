@@ -61,9 +61,9 @@ export default function Page() {
   }
 
   return (
-    <div className="p-10 max-w-6xl mx-auto">
+    <div className="flex-1 flex flex-col items-start justify-start p-10 w-full">
       <header className="mb-10">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex gap-2 mb-2">
            <span className="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">
              Portal de Capacitación
            </span>
@@ -95,6 +95,7 @@ export default function Page() {
             <CursoCard 
               key={curso.curso_id} 
               id={curso.curso_id} 
+              completado={curso.esCompletado === 1}
               {...curso} 
             />
           ))}

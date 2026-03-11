@@ -1,104 +1,89 @@
-import { pool } from '@/lib/db';
-import { FileText, ArrowLeft, Play } from 'lucide-react';
-import Link from 'next/link';
+"use client";
 
-export default async function CursoDetalle(props) {
-  // 1. Resolvemos los parámetros de la URL
-  const params = await props.params;
+import { useEffect, useState } from 'react';
+import { FileText, ArrowLeft, Play, CheckCircle2, Circle } from 'lucide-react';
+import Link from 'next/link';
+import { use } from 'react';
+
+export default function CursoDetalle(props) {
+  const params = use(props.params);
   const id = params.id;
 
-  // 2. Consulta con el ID recuperado
-  const [cursoRows] = await pool.query('SELECT * FROM Cursos WHERE curso_id = ?', [id]);
-  const curso = cursoRows[0];
+  const [datos, setDatos] = useState({ curso: null, archivos: [], esCompletado: false });
+  const [loading, setLoading] = useState(true);
 
-  if (!curso) {
-    return <div className="p-20 text-center font-bold">Curso no encontrado ❌ (ID: {id})</div>;
-  }
+  useEffect(() => {
+    const fetchDatos = async () => {
+      // 1. OBTENEMOS EL ID DEL LOCALSTORAGE
+      const usuarioId = localStorage.getItem('usuario_id');
+      
+      if (!usuarioId) {
+        window.location.href = '/login';
+        return;
+      }
 
-  try {
-    // 2. Traer datos del curso (Usando tu tabla Cursos y curso_id)
-    const [cursoRows] = await pool.query('SELECT * FROM Cursos WHERE curso_id = ?', [id]);
-    const curso = cursoRows[0];
+      try {
+        // 2. PEDIMOS LOS DATOS A UNA API (Necesitarás crear esta ruta)
+        const res = await fetch(`/api/cursos/detalle?curso_id=${id}&usuario_id=${usuarioId}`);
+        const data = await res.json();
+        setDatos(data);
+      } catch (error) {
+        console.error("Error cargando curso:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // 3. Si el curso no existe, mostramos error
-    if (!curso) {
-      return (
-        <div className="p-20 text-center">
-          <h1 className="text-2xl font-bold text-slate-800">Curso no encontrado ❌</h1>
-          <Link href="/" className="text-blue-600 hover:underline mt-4 block">
-            Volver al inicio
-          </Link>
-        </div>
-      );
-    }
+    fetchDatos();
+  }, [id]);
 
-    // 4. Traer archivos asociados
-    const [archivos] = await pool.query(
-      'SELECT * FROM Archivos_Curso WHERE curso_id = ? ORDER BY orden ASC', 
-      [id]
-    );
+  if (loading) return <div className="p-20 text-center">Cargando progreso personal...</div>;
+  if (!datos.curso) return <div className="p-20 text-center">Curso no encontrado</div>;
 
-    return (
-      <div className="min-h-screen bg-slate-50 p-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Botón Volver */}
-          <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 mb-8 transition-colors">
-            <ArrowLeft size={20} /> Volver al Dashboard
-          </Link>
+  const { curso, archivos, esCompletado } = datos;
 
-          {/* Header del Curso */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200 mb-8">
-            <div className="flex flex-col md:flex-row gap-8 items-center">
-              <img 
-                src={curso.imagenSrc || '/default.jpg'} 
-                className="w-full md:w-64 h-48 object-cover rounded-2xl shadow-md"
-                alt={curso.titulo}
-              />
-              <div>
-                <h1 className="text-3xl font-black text-slate-900 mb-4">{curso.titulo}</h1>
-                <p className="text-slate-600 leading-relaxed">{curso.descripcion}</p>
-              </div>
+  return (
+    <div className="min-h-screen bg-slate-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Banner de "Volver" */}
+        <Link href="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 mb-8 transition-colors">
+          <ArrowLeft size={20} /> Volver al Dashboard
+        </Link>
+
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200 mb-8 relative overflow-hidden">
+          <div className="flex flex-col md:flex-row gap-8 items-center">
+            <img src={curso.imagenSrc} className="w-full md:w-64 h-48 object-cover rounded-2xl" alt={curso.titulo} />
+            <div className="flex-1">
+              <h1 className="text-3xl font-black text-slate-900 mb-2">{curso.titulo}</h1>
+              <p className="text-slate-600 mb-6">{curso.descripcion}</p>
+              <button className={`px-6 py-3 rounded-xl font-bold ${esCompletado ? 'bg-emerald-500 text-white' : 'bg-blue-600 text-white'}`}>
+                {esCompletado ? 'Curso Terminado ✓' : 'Continuar Aprendiendo'}
+              </button>
             </div>
           </div>
+        </div>
 
-          {/* Lista de Contenido / Archivos */}
-          <h2 className="text-xl font-bold text-slate-800 mb-4">Contenido del Módulo</h2>
-          <div className="grid gap-4">
-            {archivos.length === 0 ? (
-              <div className="bg-white p-6 rounded-xl border border-dashed border-slate-300 text-center">
-                <p className="text-slate-400 italic">No hay archivos cargados para este curso todavía.</p>
+        {/* Lista de archivos con Checks Personales */}
+        <div className="grid gap-3">
+          {archivos.map((archivo) => (
+            <Link 
+              key={archivo.archivo_id}
+              href={`/cursos/${id}/visor/${archivo.archivo_id}`}
+              className={`bg-white p-4 rounded-2xl border flex items-center justify-between group ${archivo.fue_visto ? 'border-emerald-100 bg-emerald-50/20' : 'border-slate-200'}`}
+            >
+              <div className="flex items-center gap-4">
+                <div className={archivo.fue_visto ? 'text-emerald-500' : 'text-slate-300'}>
+                  {archivo.fue_visto ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+                </div>
+                <p className={`font-bold ${archivo.fue_visto ? 'text-slate-500 line-through' : 'text-slate-700'}`}>
+                  {archivo.nombre_archivo}
+                </p>
               </div>
-            ) : (
-              archivos.map((archivo) => (
-                <Link 
-                  key={archivo.archivo_id}
-                  href={`/cursos/visor/${archivo.archivo_id}`} // Nueva ruta
-                  className="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between hover:border-blue-300 hover:bg-blue-50/50 transition-all group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
-                      <FileText size={24} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-700 group-hover:text-blue-700">{archivo.nombre_archivo}</p>
-                      <p className="text-xs text-slate-400 uppercase tracking-wider">{archivo.tipo_archivo}</p>
-                    </div>
-                  </div>
-                  <Play size={20} className="text-slate-300 group-hover:text-blue-500" />
-                </Link>
-              ))
-            )}
-          </div>
+              <Play size={18} className={archivo.fue_visto ? 'text-emerald-300' : 'text-slate-200'} />
+            </Link>
+          ))}
         </div>
       </div>
-    );
-  } catch (error) {
-    console.error("Error en CursoDetalle:", error);
-    return (
-      <div className="p-10 text-red-500 text-center">
-        <h2 className="font-bold text-xl">⚠️ Error de sistema</h2>
-        <p>Hubo un problema al conectar con la base de datos whirlpoolKetzia.</p>
-      </div>
-    );
-  }
+    </div>
+  );
 }

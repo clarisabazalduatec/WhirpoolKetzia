@@ -27,16 +27,16 @@ export default function Sidebar() {
   if (!isMounted) return null;
 
   return (
-    <aside className="fixed bottom-0 left-0 w-full h-16 bg-white border-t border-slate-200 z-50 lg:top-0 lg:left-0 lg:w-20 lg:h-screen lg:border-r lg:border-t-0 flex lg:flex-col items-center justify-around lg:justify-start lg:py-8">
+    <aside className="fixed bottom-0 left-0 w-full h-16 bg-white border-t border-slate-200 z-50 lg:top-0 lg:left-0 lg:w-32 lg:h-screen lg:border-r lg:border-t-0 flex lg:flex-col items-center justify-around lg:justify-start lg:py-8">
 
-      <nav className="flex lg:flex-col gap-8 lg:gap-6 items-center justify-center lg:flex-grow">
+      <nav className="flex lg:flex-col gap-8 lg:gap-12 items-center justify-center lg:flex-grow">
         <Link 
           href="/" 
           className={`p-3 rounded-2xl transition-all duration-300 relative ${
             isActive('/') ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-400 hover:bg-slate-100'
           }`}
         >
-          <LayoutGrid size={24} />
+          <LayoutGrid size={32} />
           {isActive('/') && <span className="hidden lg:block absolute -left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-600 rounded-r-full" />}
         </Link>
 

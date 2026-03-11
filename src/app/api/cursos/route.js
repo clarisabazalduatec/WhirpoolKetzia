@@ -11,11 +11,15 @@ export async function GET(request) {
 
   try {
     const [rows] = await pool.query(`
-      SELECT c.* FROM Cursos c
-      JOIN Inscripciones i ON c.curso_id = i.curso_id
-      WHERE i.usuario_id = ?`, 
-      [usuarioId]
-    );
+      SELECT 
+        c.*, 
+        IF(comp.completacion_id IS NOT NULL, 1, 0) as esCompletado
+      FROM Cursos c
+      INNER JOIN Inscripciones i ON c.curso_id = i.curso_id
+      LEFT JOIN Completaciones comp ON i.inscripcion_id = comp.inscripcion_id 
+        AND comp.usuario_id = i.usuario_id
+      WHERE i.usuario_id = ?
+    `, [usuarioId]);
 
     return NextResponse.json(rows);
   } catch (error) {
