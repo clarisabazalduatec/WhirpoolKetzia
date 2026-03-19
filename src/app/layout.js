@@ -13,16 +13,17 @@ export default function RootLayout({ children }) {
     isLogin: pathname === '/login',
     isVisor: pathname.includes('/visor/'),
     isComunidad: pathname === '/comunidad',
-    isProfile: pathname === '/perfil'
+    isProfile: pathname === '/perfil',
+    isAdmin: pathname.includes('/admin', '/admin/')
   };
 
   // 2. Lógica de componentes
   const mostrarSidebar = !configRutas.isLogin; 
   const mostrarHeader = !configRutas.isLogin && !configRutas.isVisor;
-  const colapsarSidebar = configRutas.isComunidad || configRutas.isVisor || configRutas.isProfile;
+  const colapsarSidebar = configRutas.isComunidad || configRutas.isVisor || configRutas.isProfile || configRutas.isAdmin;
   
   // 3. Clases dinámicas para el Sidebar y el Contenedor
-  const anchoSidebar = configRutas.isVisor || configRutas.isComunidad || configRutas.isProfile ? 'lg:ml-20' : 'lg:ml-32';
+  const anchoSidebar = configRutas.isVisor || configRutas.isComunidad || configRutas.isProfile || configRutas.isAdmin ? 'lg:ml-20' : 'lg:ml-32';
   const margenMain = mostrarSidebar ? `${anchoSidebar} pb-2 lg:pb-0` : '';
 
   return (

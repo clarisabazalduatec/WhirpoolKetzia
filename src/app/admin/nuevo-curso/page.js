@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Plus, X, Loader2, Image as ImageIcon, Search, FileText, HelpCircle, GripVertical } from 'lucide-react';
+import { ArrowLeft, Save, Plus, X, Loader2, Image as ImageIcon, Search, FileText, HelpCircle, ChevronUp, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NuevoCurso() {
@@ -34,6 +34,7 @@ export default function NuevoCurso() {
       .catch(() => setQuizzesDisponibles([]));
   }, [router]);
 
+  // --- LÓGICA DE AGREGAR / QUITAR ---
   const agregarItem = (id, tipo) => {
     const key = tipo === 'archivo' ? 'archivosSeleccionados' : 'quizzesSeleccionados';
     if (!formData[key].includes(id)) {
@@ -44,6 +45,20 @@ export default function NuevoCurso() {
   const quitarItem = (id, tipo) => {
     const key = tipo === 'archivo' ? 'archivosSeleccionados' : 'quizzesSeleccionados';
     setFormData({ ...formData, [key]: formData[key].filter(itemId => itemId !== id) });
+  };
+
+  // --- LÓGICA DE REORDENAMIENTO (NUEVA) ---
+  const moverItem = (index, direccion, tipo) => {
+    const key = tipo === 'archivo' ? 'archivosSeleccionados' : 'quizzesSeleccionados';
+    const nuevaLista = [...formData[key]];
+    const nuevaPos = index + direccion;
+
+    if (nuevaPos < 0 || nuevaPos >= nuevaLista.length) return;
+
+    // Intercambio de posiciones (Swapping)
+    [nuevaLista[index], nuevaLista[nuevaPos]] = [nuevaLista[nuevaPos], nuevaLista[index]];
+
+    setFormData({ ...formData, [key]: nuevaLista });
   };
 
   const handleSubmit = async (e) => {
@@ -72,10 +87,9 @@ export default function NuevoCurso() {
   );
 
   return (
-    // CAMBIO: max-w-none y w-full para ocupar toda la pantalla
-    <div className="w-full min-h-screen bg-slate-50 font-sans p-6 lg:p-8">
+    <div className="w-full min-h-screen font-sans p-6 lg:p-8">
       
-      {/* Header un poco más compacto */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
         <Link href="/admin" className="flex items-center gap-2 text-slate-400 hover:text-blue-600 font-bold transition-colors group">
           <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> Volver
@@ -88,12 +102,8 @@ export default function NuevoCurso() {
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         
-        {/* ==========================================================
-           COLUMNA IZQUIERDA: CONFIGURACIÓN BASE (3/12)
-           ========================================================== */}
+        {/* COLUMNA IZQUIERDA: CONFIGURACIÓN BASE */}
         <div className="xl:col-span-3 space-y-6">
-          
-          {/* Título y Descripción */}
           <div className="bg-white p-7 rounded-3xl border border-slate-100 shadow-sm">
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Título del Curso</label>
             <input 
@@ -103,7 +113,6 @@ export default function NuevoCurso() {
               onChange={(e) => setFormData({...formData, titulo: e.target.value})}
               placeholder="Ej: Introducción a IA"
             />
-            
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Descripción</label>
             <textarea 
               rows="5"
@@ -114,7 +123,6 @@ export default function NuevoCurso() {
             />
           </div>
 
-          {/* Portada */}
           <div className="bg-white p-7 rounded-3xl border border-slate-100 shadow-sm">
             <h3 className="text-lg font-black text-slate-900 mb-4">Portada</h3>
             <div className="aspect-[16/10] bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden mb-4 relative">
@@ -137,9 +145,7 @@ export default function NuevoCurso() {
         </div>
 
 
-        {/* ==========================================================
-           COLUMNA CENTRAL: TU CURSO (CONTENIDOS AGREGADOS) (5/12)
-           ========================================================== */}
+        {/* COLUMNA CENTRAL: ESTRUCTURA FINAL (Hacer funcional) */}
         <div className="xl:col-span-5 space-y-6">
           <div className="bg-white p-8 rounded-[2rem] border-2 border-slate-100 shadow-lg shadow-blue-50/20 min-h-[calc(100vh-200px)]">
             <div className="flex items-center justify-between mb-8">
@@ -157,13 +163,31 @@ export default function NuevoCurso() {
                 </div>
               )}
 
-              {/* Lista Unificada */}
+              {/* Lista de Archivos Seleccionados con Controles de Orden */}
               {formData.archivosSeleccionados.map((id, index) => {
                 const archivo = archivosDisponibles.find(a => a.archivo_id === id);
                 return (
                   <div key={`sel-${id}`} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-blue-100 hover:shadow-sm transition-all group">
                     <div className="flex items-center gap-4">
-                      <GripVertical size={20} className="text-slate-300 cursor-move group-hover:text-slate-400" />
+                      {/* Botones de Reordenar */}
+                      <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          type="button" 
+                          onClick={() => moverItem(index, -1, 'archivo')}
+                          disabled={index === 0}
+                          className="text-slate-300 hover:text-blue-600 disabled:opacity-30"
+                        >
+                          <ChevronUp size={16} />
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => moverItem(index, 1, 'archivo')}
+                          disabled={index === formData.archivosSeleccionados.length - 1}
+                          className="text-slate-300 hover:text-blue-600 disabled:opacity-30"
+                        >
+                          <ChevronDown size={16} />
+                        </button>
+                      </div>
                       <span className="text-xs font-black text-blue-300">#{index+1}</span>
                       <FileText size={18} className="text-blue-500" />
                       <p className="font-bold text-slate-800 text-sm">{archivo?.nombre_archivo}</p>
@@ -175,11 +199,30 @@ export default function NuevoCurso() {
                 );
               })}
               
-              {formData.quizzesSeleccionados.map((id) => {
+              {/* Quizzes (Normalmente van al final, pero también con opción de quitar) */}
+              {formData.quizzesSeleccionados.map((id, index) => {
                 const quiz = quizzesDisponibles.find(q => q.quiz_id === id);
                 return (
-                  <div key={`quiz-${id}`} className="flex items-center justify-between p-4 bg-purple-50 text-purple-900 border border-purple-100 rounded-2xl">
+                  <div key={`quiz-${id}`} className="flex items-center justify-between p-4 bg-purple-50 text-purple-900 border border-purple-100 rounded-2xl group">
                     <div className="flex items-center gap-4">
+                      <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          type="button" 
+                          onClick={() => moverItem(index, -1, 'quiz')}
+                          disabled={index === 0}
+                          className="text-purple-300 hover:text-purple-600 disabled:opacity-30"
+                        >
+                          <ChevronUp size={16} />
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => moverItem(index, 1, 'quiz')}
+                          disabled={index === formData.quizzesSeleccionados.length - 1}
+                          className="text-purple-300 hover:text-purple-600 disabled:opacity-30"
+                        >
+                          <ChevronDown size={16} />
+                        </button>
+                      </div>
                       <HelpCircle size={18} className="text-purple-600" />
                       <p className="font-bold text-sm">{quiz?.titulo} (Examen Final)</p>
                     </div>
@@ -194,14 +237,11 @@ export default function NuevoCurso() {
         </div>
 
 
-        {/* ==========================================================
-           COLUMNA DERECHA: BIBLIOTECA (DISPONIBLES) (4/12)
-           ========================================================== */}
+        {/* COLUMNA DERECHA: BIBLIOTECA GLOBAL */}
         <div className="xl:col-span-4 space-y-6">
           <div className="bg-white p-7 rounded-3xl border border-slate-100 shadow-sm sticky top-8">
             <h2 className="text-xl font-black text-slate-900 mb-5">Biblioteca Global</h2>
 
-            {/* Buscador */}
             <div className="relative mb-6">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
@@ -212,7 +252,6 @@ export default function NuevoCurso() {
               />
             </div>
 
-            {/* Lista de Archivos Disponibles (con Scroll) */}
             <div className="max-h-[40vh] overflow-y-auto pr-2 space-y-2.5 mb-8 custom-scrollbar">
               {archivosFiltrados.length > 0 ? archivosFiltrados.map(archivo => (
                 <button
@@ -229,7 +268,6 @@ export default function NuevoCurso() {
               )}
             </div>
 
-            {/* Quizzes Disponibles */}
             <div className="mb-8">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Exámenes</p>
               <div className="space-y-2.5">
@@ -249,7 +287,6 @@ export default function NuevoCurso() {
               </div>
             </div>
 
-            {/* Botón Guardar (Ahora dentro de la tarjeta de biblioteca para que flote) */}
             <button 
               type="submit"
               disabled={loading}
