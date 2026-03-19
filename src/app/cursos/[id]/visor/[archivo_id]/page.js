@@ -98,7 +98,7 @@ export default function VisorMaterial(props) {
       <div className="flex-1 w-full bg-white relative">
         <iframe className="absolute top-0 left-0 w-full h-full border-0" src={obtenerEmbedUrl(archivo.url_archivo)} title="YouTube video player" 
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-        allowFullcreen></iframe>
+        ></iframe>
       </div>
 
     </div>

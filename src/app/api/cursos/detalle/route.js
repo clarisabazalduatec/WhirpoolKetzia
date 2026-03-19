@@ -22,7 +22,6 @@ export async function GET(request) {
     if (cursoRows.length === 0) return NextResponse.json({ error: 'No existe' }, { status: 404 });
 
     // 2. Consulta UNIFICADA (Archivos + Quizzes)
-    // Usamos JOIN en la segunda parte para traer el título desde la tabla Quizzes
     const [items] = await pool.query(`
       -- PARTE 1: Archivos
       SELECT 
@@ -37,7 +36,7 @@ export async function GET(request) {
 
       UNION ALL
 
-      -- PARTE 2: Quizzes (Ahora leyendo de Quizzes_Completados)
+      -- PARTE 2: Quizzes
       SELECT 
         q.quiz_id AS id_contenido,
         q.titulo AS titulo,
@@ -52,16 +51,30 @@ export async function GET(request) {
       ORDER BY orden ASC
     `, [usuario_id, curso_id, usuario_id, curso_id]);
 
-    // 3. Progreso
+    // 3. Cálculo de Progreso
     const totalItems = items.length;
-    const completados = items.filter(i => i.completado > 0).length;
-    const porcentaje = totalItems > 0 ? Math.round((completados / totalItems) * 100) : 0;
+    const completadosCount = items.filter(i => i.completado > 0).length;
+    const porcentaje = totalItems > 0 ? Math.round((completadosCount / totalItems) * 100) : 0;
+    const esCompletadoReal = porcentaje === 100 && totalItems > 0;
+
+    // --- NUEVA LÓGICA DE INSERCIÓN EN COMPLETACIONES ---
+    if (esCompletadoReal) {
+      // Intentamos insertar en la tabla de completaciones oficial de Whirlpool
+      // Usamos INSERT IGNORE para que si ya existe, no tire error ni duplique
+      await pool.query(`
+        INSERT IGNORE INTO Completaciones (usuario_id, inscripcion_id, fecha_completacion)
+        SELECT ?, inscripcion_id, NOW() 
+        FROM Inscripciones 
+        WHERE usuario_id = ? AND curso_id = ?
+      `, [usuario_id, usuario_id, curso_id]);
+    }
+    // ---------------------------------------------------
 
     return NextResponse.json({
       curso: cursoRows[0],
       items,
       porcentaje,
-      esCompletado: porcentaje === 100
+      esCompletado: esCompletadoReal
     });
 
   } catch (error) {
