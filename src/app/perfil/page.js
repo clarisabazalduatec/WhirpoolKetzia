@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Mail, Shield, Calendar, BookOpen, CheckCircle, Clock, Award } from 'lucide-react';
+import { User, Mail, Shield, Calendar, BookOpen, CheckCircle, LogOut, Award } from 'lucide-react';
 import Link from 'next/link';
 
 export default function PerfilPage() {
@@ -19,6 +19,12 @@ export default function PerfilPage() {
       .catch(err => { console.error(err); setLoading(false); });
   }, [router]);
 
+  const handleLogout = () => {
+    localStorage.clear();
+    router.push('/login');
+    router.refresh();
+  };
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -30,10 +36,23 @@ export default function PerfilPage() {
   const { usuario, stats } = datos;
 
   return (
-    <div className="max-w-7xl mx-auto p-6 lg:p-10">
+    <div className="max-w-7xl mx-auto p-6 lg:p-10 pb-32 relative">
       
+      {/* --- BOTÓN FLOTANTE (PC) --- */}
+      <div className="hidden lg:block fixed bottom-10 left-10 z-50">
+        <button 
+          onClick={handleLogout}
+          className="group bg-white hover:bg-red-50 text-slate-400 hover:text-red-600 p-4 rounded-full shadow-2xl border border-slate-100 transition-all flex items-center gap-0 hover:gap-3 overflow-hidden max-w-[60px] hover:max-w-[200px]"
+        >
+          <LogOut size={24} />
+          <span className="whitespace-nowrap font-black text-sm opacity-0 group-hover:opacity-100 transition-all">
+            Cerrar Sesión
+          </span>
+        </button>
+      </div>
+
+      {/* Header de Perfil */}
       <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200 mb-10 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
-        
         <div className="w-32 h-32 bg-blue-600 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-blue-100 shrink-0 rotate-3">
           <User size={60} className="-rotate-3" />
         </div>
@@ -54,7 +73,6 @@ export default function PerfilPage() {
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         
         <div className="w-full lg:w-[60%] space-y-8">
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex items-center gap-5">
               <div className="bg-orange-100 text-orange-600 p-4 rounded-2xl"><BookOpen size={28} /></div>
@@ -73,21 +91,19 @@ export default function PerfilPage() {
             </div>
           </div>
 
-          {/* Sección de "Insignias o Logros" (Ejemplo visual) */}
           <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
             <Award className="absolute right-[-20px] bottom-[-20px] text-white/10" size={180} />
-            <h3 className="text-xl font-black mb-2 flex items-center gap-2">
-                Nivel de Aprendizaje
-            </h3>
-            <p className="text-slate-400 text-sm mb-6 max-w-xs font-medium">Sigue completando cursos para subir de nivel y desbloquear nuevas insignias.</p>
+            <h3 className="text-xl font-black mb-2 flex items-center gap-2">Nivel de Aprendizaje</h3>
+            <p className="text-slate-400 text-sm mb-6 max-w-xs font-medium">Sigue completando cursos para subir de nivel.</p>
             <div className="bg-white/10 h-2 rounded-full w-full overflow-hidden">
                 <div className="bg-blue-500 h-full w-[75%]" />
             </div>
           </div>
         </div>
 
-        {/* COLUMNA DERECHA: Datos de Cuenta (40%) */}
-        <aside className="w-full lg:w-[40%]">
+        {/* COLUMNA DERECHA */}
+        <aside className="w-full lg:w-[40%] space-y-6">
+          {/* Tarjeta de Datos de Cuenta */}
           <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200">
             <h2 className="text-xl font-black text-slate-900 mb-8 border-b border-slate-100 pb-4 italic">
                 Datos de la Cuenta
@@ -116,6 +132,16 @@ export default function PerfilPage() {
                 <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
               </div>
             </div>
+          </div>
+
+          <div className="lg:hidden">
+            <button 
+                onClick={handleLogout}
+                className="w-full bg-red-50 text-red-600 font-black py-5 rounded-2xl flex items-center justify-center gap-3 border border-red-100 active:scale-95 transition-all shadow-sm shadow-red-100"
+              >
+                <LogOut size={20} />
+                Cerrar Sesión
+              </button>
           </div>
         </aside>
 

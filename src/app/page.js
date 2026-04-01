@@ -10,7 +10,6 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Función para determinar el saludo según la hora
   const obtenerSaludo = () => {
     const hora = new Date().getHours();
     if (hora >= 6 && hora < 12) return "Buenos días";
@@ -20,8 +19,6 @@ export default function Page() {
 
   useEffect(() => {
     const usuarioId = localStorage.getItem('usuario_id');
-    const usuarioRolId = localStorage.getItem('rol_id')
-
     if (!usuarioId) {
       router.push('/login');
       return;
@@ -29,14 +26,12 @@ export default function Page() {
 
     const cargarDatos = async () => {
       try {
-        // 1. Cargamos el nombre del usuario (puedes usar la API que creamos para el Header)
         const resUser = await fetch(`/api/usuario?id=${usuarioId}`);
         if (resUser.ok) {
           const userData = await resUser.json();
-          setNombreUsuario(userData.nombre.split(' ')[0]); // Solo el primer nombre
+          setNombreUsuario(userData.nombre.split(' ')[0]);
         }
 
-        // 2. Cargamos los cursos
         const resCursos = await fetch(`/api/cursos?usuario_id=${usuarioId}`);
         if (resCursos.ok) {
           const cursosData = await resCursos.json();
@@ -62,21 +57,23 @@ export default function Page() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-start justify-start p-10 w-full">
-      <header className="">        
-        <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+    /* Cambiado items-center por items-start para alinear todo a la izquierda siempre */
+    <div className="flex-1 flex flex-col items-start justify-start p-6 md:p-10 w-full max-w-[1600px] mx-auto">
+      <header className="mb-10 text-left w-full">        
+        {/* whitespace-nowrap evita que el nombre salte a la siguiente línea si hay espacio */}
+        <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight whitespace-nowrap">
           {obtenerSaludo()} {nombreUsuario || 'empleado'}.
         </h1>
         
-        <p className="text-slate-500 mt-3 text-lg font-medium">
+        <p className="text-slate-500 mt-2 text-base md:text-lg font-medium">
           Echa un vistazo a tus cursos.
         </p>
       </header>
 
       {cursos.length === 0 ? (
-        <div className="bg-white p-16 rounded-[2rem] border-2 border-dashed border-slate-200 text-center shadow-sm">
+        <div className="bg-white p-12 md:p-16 rounded-[2.5rem] border-2 border-dashed border-slate-200 text-center shadow-sm w-full max-w-2xl">
           <div className="text-slate-300 mb-4 flex justify-center">
-            <svg size={48} fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-16 h-16">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-16 h-16">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
@@ -84,7 +81,8 @@ export default function Page() {
           <p className="text-slate-400">No tienes cursos pendientes por ahora.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        /* Grid responsivo manteniendo alineación izquierda */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 w-full justify-items-start">
           {cursos.map((curso) => (
             <CursoCard 
               key={curso.curso_id} 

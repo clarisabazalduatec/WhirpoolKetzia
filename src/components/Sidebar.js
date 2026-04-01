@@ -31,8 +31,8 @@ export default function Sidebar({ colapsado }) {
 
   return (
     <aside 
-      className={`fixed bottom-0 left-0 w-full h-16 bg-white border-t border-slate-200 z-50 transition-all duration-500 ease-in-out
-        lg:top-0 lg:left-0 lg:h-screen lg:border-r lg:border-t-0 flex lg:flex-col items-center justify-around lg:justify-start lg:py-8
+      className={`fixed bottom-0 left-0 w-full h-16 bg-white/70 backdrop-blur-lg border-t border-slate-200/50 z-50 transition-all duration-500 ease-in-out
+        lg:top-0 lg:left-0 lg:h-screen lg:bg-white lg:backdrop-blur-none lg:border-r lg:border-t-0 flex lg:flex-col items-center justify-around lg:justify-start lg:py-8
         ${colapsado ? 'lg:w-20' : 'lg:w-32'}`}
     >
       <nav className="flex lg:flex-col gap-2 lg:gap-12 items-center justify-center lg:flex-grow w-full">
@@ -85,7 +85,6 @@ export default function Sidebar({ colapsado }) {
 
       </nav>
 
-      {/* El cambio está aquí: hidden lg:flex oculta el botón en móvil */}
       <button 
         onClick={handleLogout} 
         className="hidden lg:flex text-slate-300 hover:text-red-500 transition-colors p-2 lg:p-3 lg:mt-auto"
