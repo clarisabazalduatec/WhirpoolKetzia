@@ -36,6 +36,7 @@ export default function RootLayout({ children }) {
 
   // 2. Lógica de componentes
   const mostrarSidebar = !configRutas.isLogin && !configRutas.isRegistro; 
+  const mostrarChatbot = !configRutas.isLogin && !configRutas.isRegistro; 
   const mostrarHeader = !configRutas.isLogin && !configRutas.isVisor && !configRutas.isRegistro && !configRutas.isQuiz;
   const colapsarSidebar = configRutas.isComunidad || configRutas.isVisor || configRutas.isProfile || configRutas.isAdmin || configRutas.isQuiz;
   
@@ -60,7 +61,7 @@ export default function RootLayout({ children }) {
             {children}
           </main>
 
-          <ChatBot/>
+          {mostrarChatbot && <ChatBot/>}
 
         </div>
       </body>
