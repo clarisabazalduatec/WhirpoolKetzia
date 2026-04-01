@@ -12,7 +12,9 @@ export default function RootLayout({ children }) {
   // 1. Centro de mando de rutas
   const configRutas = {
     isLogin: pathname === '/login',
+    isRegistro: pathname === '/registro',
     isVisor: pathname.includes('/visor/'),
+    isQuiz: pathname.includes('/quiz/'),
     isComunidad: pathname === '/comunidad',
     isProfile: pathname === '/perfil',
     isAdmin: pathname.includes('/admin', '/admin/')
@@ -23,6 +25,7 @@ export default function RootLayout({ children }) {
   const nombresRutas = {
     '/': 'Whirlpool Learning',
     '/login': 'Iniciar Sesión',
+    '/registro': 'Registro',
     '/comunidad': 'Comunidad',
     '/perfil': 'Mi Perfil',
     '/admin': 'Admin',
@@ -32,12 +35,12 @@ export default function RootLayout({ children }) {
   const tituloActual = nombresRutas[pathname] || 'Whirlpool Learning';
 
   // 2. Lógica de componentes
-  const mostrarSidebar = !configRutas.isLogin; 
-  const mostrarHeader = !configRutas.isLogin && !configRutas.isVisor;
-  const colapsarSidebar = configRutas.isComunidad || configRutas.isVisor || configRutas.isProfile || configRutas.isAdmin;
+  const mostrarSidebar = !configRutas.isLogin && !configRutas.isRegistro; 
+  const mostrarHeader = !configRutas.isLogin && !configRutas.isVisor && !configRutas.isRegistro && !configRutas.isQuiz;
+  const colapsarSidebar = configRutas.isComunidad || configRutas.isVisor || configRutas.isProfile || configRutas.isAdmin || configRutas.isQuiz;
   
   // 3. Clases dinámicas para el Sidebar y el Contenedor
-  const anchoSidebar = configRutas.isVisor || configRutas.isComunidad || configRutas.isProfile || configRutas.isAdmin ? 'lg:ml-20' : 'lg:ml-32';
+  const anchoSidebar = configRutas.isVisor || configRutas.isComunidad || configRutas.isProfile || configRutas.isAdmin || configRutas.isQuiz ? 'lg:ml-20' : 'lg:ml-32';
   const margenMain = mostrarSidebar ? `${anchoSidebar} pb-2 lg:pb-0` : '';
 
   return (

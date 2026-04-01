@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { HelpCircle, ArrowRight, CheckCircle2, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { HelpCircle, ArrowRight, CheckCircle2, AlertCircle, Loader2, ArrowLeft, X } from 'lucide-react';
 import Link from 'next/link';
 
 export default function QuizPage(props) {
@@ -17,6 +17,9 @@ export default function QuizPage(props) {
   const [respuestas, setRespuestas] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState(null);
+  
+  // Estado para el modal de confirmación de salida
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
   useEffect(() => {
     fetch(`/api/quiz/detalle?quiz_id=${quiz_id}`)
@@ -97,7 +100,48 @@ export default function QuizPage(props) {
   const progresoPregunta = ((paso + 1) / totalPreguntas) * 100;
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-6 md:p-12 flex flex-col">
+    <div className="min-h-screen bg-slate-900 text-white p-6 md:p-12 flex flex-col relative">
+      
+      {/* MODAL DE CONFIRMACIÓN DE SALIDA */}
+      {mostrarConfirmacion && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+          <div className="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <AlertCircle size={40} />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 mb-2">¿Estás seguro?</h3>
+            <p className="text-slate-500 font-bold mb-8">Si sales ahora, perderás el progreso de esta evaluación y tus respuestas no serán guardadas.</p>
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={() => router.push(`/cursos/${curso_id}`)}
+                className="bg-red-500 text-white py-4 rounded-2xl font-black hover:bg-red-600 transition-all"
+              >
+                Sí, salir del curso
+              </button>
+              <button 
+                onClick={() => setMostrarConfirmacion(false)}
+                className="bg-slate-100 text-slate-900 py-4 rounded-2xl font-black hover:bg-slate-200 transition-all"
+              >
+                Continuar evaluación
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HEADER SUPERIOR CON BOTÓN SALIR */}
+      <div className="max-w-3xl mx-auto w-full flex justify-between items-center mb-8">
+        <button 
+          onClick={() => setMostrarConfirmacion(true)}
+          className="flex items-center gap-2 text-slate-500 hover:text-white font-bold transition-colors group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all">
+            <X size={20} />
+          </div>
+          <span>Salir de la evaluación</span>
+        </button>
+      </div>
+
       <div className="max-w-3xl mx-auto w-full flex-grow flex flex-col justify-center">
         
         {/* Header del Quiz */}
@@ -140,7 +184,7 @@ export default function QuizPage(props) {
           </div>
         </div>
 
-        {/* Navegación */}
+        {/* Navegación Inferior */}
         <div className="flex justify-end pt-8 border-t border-slate-800">
           {paso < totalPreguntas - 1 ? (
             <button

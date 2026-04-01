@@ -14,10 +14,10 @@ export default function Sidebar({ colapsado }) {
   useEffect(() => {
     setIsMounted(true);
     
-    // Obtenemos el rol directamente aquí
     const savedRole = localStorage.getItem('rol_id');
-    if (savedRole) {
-      setRolId(parseInt(savedRole));
+    if (savedRole !== null) {
+      // Usamos Number() para asegurar que la comparación sea numérica
+      setRolId(Number(savedRole));
     }
   }, []);
 

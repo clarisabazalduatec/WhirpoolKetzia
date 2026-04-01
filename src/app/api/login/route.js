@@ -1,27 +1,39 @@
+import bcrypt from 'bcrypt';
 import { pool } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-export async function POST(request) {
+export async function POST(req) {
   try {
-    const { email } = await request.json();
+    const { email, password } = await req.json();
 
-    // CORRECCIÓN: Agregamos 'rol_id' a la consulta SELECT
-    const [rows] = await pool.query(
-      'SELECT usuario_id, rol_id FROM Usuarios WHERE email = ?', 
-      [email]
-    );
+    // 1. Buscar usuario
+    const [rows] = await pool.query('SELECT * FROM Usuarios WHERE email = ?', [email]);
+    const user = rows[0];
 
-    if (rows.length > 0) {
-      // Ahora enviamos un objeto que contiene AMBOS valores
-      return NextResponse.json({ 
-        usuario_id: rows[0].usuario_id,
-        rol_id: rows[0].rol_id // <--- Esto es lo que le faltaba a tu Sidebar
-      });
-    } else {
-      return NextResponse.json({ message: 'Usuario no encontrado' }, { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: "El correo no está registrado" }, { status: 401 });
     }
+
+    // 2. Verificar contraseña hash
+    // Nota: 'password_hash' debe ser el nombre de la columna en tu DB
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+
+    if (!isMatch) {
+      return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 401 });
+    }
+
+    // 3. Responder con datos necesarios para el localStorage
+    return NextResponse.json({
+      message: "Login exitoso",
+      user: {
+        id: user.usuario_id,
+        nombre: user.nombre,
+        rol: user.rol_id
+      }
+    });
+
   } catch (error) {
-    console.error("Error en el servidor:", error);
-    return NextResponse.json({ message: 'Error interno del servidor' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: "Error en el servidor" }, { status: 500 });
   }
 }
