@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import ChatBot from '@/components/ChatBot';
 import './globals.css';
 
 export default function RootLayout({ children }) {
@@ -55,6 +56,9 @@ export default function RootLayout({ children }) {
           <main className={`flex-1 ${mostrarSidebar ? 'p-2' : ''}`}>
             {children}
           </main>
+
+          <ChatBot/>
+
         </div>
       </body>
     </html>
