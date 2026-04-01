@@ -1,11 +1,23 @@
 import mysql from 'mysql2/promise';
 
+console.log("INTENTANDO CONECTAR CON:", {
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  port: process.env.DB_PORT
+});
+
 export const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'GabrielAlejandro10.',
-  database: 'whirlpoolKetzia',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: parseInt(process.env.DB_PORT) || 4000, // Asegura que sea un número
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  // CONFIGURACIÓN OBLIGATORIA PARA TIDB CLOUD
+  ssl: {
+    minVersion: 'TLSv1.2',
+    rejectUnauthorized: true
+  }
 });

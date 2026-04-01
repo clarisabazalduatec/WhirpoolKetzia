@@ -13,7 +13,8 @@ export async function GET(request) {
       return NextResponse.json(rows[0]);
     }
     return NextResponse.json({ message: 'No encontrado' }, { status: 404 });
-  } catch (error) {
-    return NextResponse.json({ message: 'Error' }, { status: 500 });
-  }
+  }catch (error) {
+  console.error("ERROR DETECTADO:", error.message); // <--- ESTO aparecerá en tu terminal
+  return NextResponse.json({ error: error.message }, { status: 500 });
+}
 }
