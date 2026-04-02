@@ -20,3 +20,28 @@ body {
   /* Aseguramos que el scroll sea suave */
   scroll-behavior: smooth; 
 }
+
+/* Estilos para el texto de la IA */
+.markdown-container p {
+  margin-bottom: 0.75rem;
+}
+
+.markdown-container p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-container strong {
+  font-weight: 800;
+  color: #1e293b; /* slate-800 */
+}
+
+/* En caso de que el bot envíe listas */
+.markdown-container ul {
+  list-style-type: disc;
+  margin-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.markdown-container li {
+  margin-bottom: 0.25rem;
+}
