@@ -10,8 +10,8 @@ export async function GET() {
       [completacionesStats],
       [quizStats]
     ] = await Promise.all([
-      // 1. Total de alumnos únicos (Rol 2)
-      pool.query('SELECT COUNT(*) as total FROM Usuarios WHERE rol_id = 2'),
+      //Total de alumnos
+      pool.query('SELECT COUNT(DISTINCT usuario_id) as total FROM Inscripciones'),
       
       // 2. Total de cursos activos
       pool.query('SELECT COUNT(*) as total FROM Cursos'),
@@ -30,6 +30,8 @@ export async function GET() {
       // 4. Promedio de calificaciones de Quizzes
       pool.query('SELECT ROUND(AVG(calificacion)) as promedio FROM Intentos_Quiz')
     ]);
+
+    console.log("alumnos inscritos: ", alumnosCount[0].total);
 
     // Estructuramos la respuesta para el frontend
     return NextResponse.json({

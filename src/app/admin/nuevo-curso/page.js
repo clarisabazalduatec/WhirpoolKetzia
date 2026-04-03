@@ -67,6 +67,14 @@ export default function NuevoCurso() {
     setLoading(true);
     const usuario_id = localStorage.getItem('usuario_id');
 
+    if (formData.imagenSrc.length > 255) {
+      return alert("Error: La URL de la imagen es demasiado larga (máximo 255 caracteres).");
+    }
+    if (formData.archivosSeleccionados.length === 0 && formData.quizzesSeleccionados.length === 0) {
+      return alert("Error: El curso debe tener al menos un archivo o un quiz.");
+    }
+
+
     try {
       const res = await fetch('/api/admin/cursos', {
         method: 'POST',
@@ -74,9 +82,22 @@ export default function NuevoCurso() {
         body: JSON.stringify({ ...formData, creado_por: usuario_id }),
       });
 
-      if (res.ok) router.push('/admin');
+      // 1. Obtenemos la respuesta del servidor (sea éxito o error)
+      const data = await res.json();
+
+      if (res.ok) {
+        // Éxito total
+        router.push('/admin');
+      } else {
+        // 2. ERROR CONTROLADO: Mostramos el mensaje que viene del API
+        // Por ejemplo: "Faltan campos obligatorios" o el error de MySQL
+        alert(`Error: ${data.error || "No se pudo crear el curso"}`);
+      }
+
     } catch (error) {
-      alert("Error al guardar el curso");
+      // 3. ERROR DE RED: Por si se cae el internet o falla el servidor totalmente
+      console.error("Error de red:", error);
+      alert("Hubo un problema de conexión con el servidor.");
     } finally {
       setLoading(false);
     }
@@ -265,6 +286,7 @@ export default function NuevoCurso() {
             </div>
 
             <div className="max-h-[40vh] overflow-y-auto pr-2 space-y-2.5 mb-8 custom-scrollbar">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Archivos</p>
               {archivosFiltrados.length > 0 ? archivosFiltrados.map(archivo => (
                 <button
                   key={archivo.archivo_id}

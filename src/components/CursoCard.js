@@ -26,12 +26,6 @@ export default function CursoCard({ id, titulo, descripcionCorta, imagenSrc, com
               {descripcionCorta}
             </p>
           </div>
-        
-        {completado && (
-            <div className="absolute top-2 right-2 bg-emerald-500 text-white px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1">
-              <CheckCircle2 size={10} /> Completado
-            </div>
-          )}
           
       </div>
       
