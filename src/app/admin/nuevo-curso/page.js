@@ -15,6 +15,7 @@ export default function NuevoCurso() {
   const [formData, setFormData] = useState({
     titulo: '',
     descripcion: '',
+    descripcionCorta: '', // Nuevo campo
     imagenSrc: '',
     archivosSeleccionados: [],
     quizzesSeleccionados: []
@@ -113,6 +114,17 @@ export default function NuevoCurso() {
               onChange={(e) => setFormData({...formData, titulo: e.target.value})}
               placeholder="Ej: Introducción a IA"
             />
+
+            {/* NUEVO CAMPO: DESCRIPCIÓN CORTA */}
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Descripción Corta (Cards)</label>
+            <input 
+              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold mb-5 text-sm"
+              value={formData.descripcionCorta}
+              onChange={(e) => setFormData({...formData, descripcionCorta: e.target.value})}
+              placeholder="Resumen de 1 frase para la tarjeta"
+              maxLength={100}
+            />
+
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Descripción</label>
             <textarea 
               rows="5"

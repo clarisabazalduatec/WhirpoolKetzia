@@ -41,8 +41,10 @@ export default function RootLayout({ children }) {
   const colapsarSidebar = configRutas.isComunidad || configRutas.isVisor || configRutas.isProfile || configRutas.isAdmin || configRutas.isQuiz;
   
   // 3. Clases dinámicas para el Sidebar y el Contenedor
-  const anchoSidebar = configRutas.isVisor || configRutas.isComunidad || configRutas.isProfile || configRutas.isAdmin || configRutas.isQuiz ? 'lg:ml-20' : 'lg:ml-32';
-  const margenMain = mostrarSidebar ? `${anchoSidebar} pb-2 lg:pb-0` : '';
+  const anchoSidebar = colapsarSidebar ? 'lg:pl-20' : 'lg:pl-32'; 
+  
+  // Si sientes que sigue habiendo mucho espacio, puedes probar con valores menores:
+  // const anchoSidebar = colapsarSidebar ? 'lg:pl-24' : 'lg:pl-36';
 
   return (
     <html lang="es">
@@ -53,16 +55,16 @@ export default function RootLayout({ children }) {
       <body className="bg-slate-50 antialiased overflow-x-hidden"> 
         {mostrarSidebar && <Sidebar colapsado={colapsarSidebar} />}
 
-        <div className={`min-h-screen flex flex-col transition-all duration-500 ease-in-out ${margenMain}`}>
+        {/* Cambiamos el padding para que sea más ajustado al Sidebar real */}
+        <div className={`min-h-screen flex flex-col transition-all duration-500 ease-in-out ${mostrarSidebar ? (colapsarSidebar ? 'lg:pl-20' : 'lg:pl-32') : ''}`}>
           
           {mostrarHeader && <Header />}
           
-          <main className={`flex-1 ${mostrarSidebar ? 'p-2' : ''}`}>
+          <main className="flex-1">
             {children}
           </main>
 
           {mostrarChatbot && <ChatBot/>}
-
         </div>
       </body>
     </html>

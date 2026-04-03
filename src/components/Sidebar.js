@@ -35,8 +35,18 @@ export default function Sidebar({ colapsado }) {
         lg:top-0 lg:left-0 lg:h-screen lg:bg-white lg:backdrop-blur-none lg:border-r lg:border-t-0 flex lg:flex-col items-center justify-around lg:justify-start lg:py-8
         ${colapsado ? 'lg:w-20' : 'lg:w-32'}`}
     >
-      <nav className="flex lg:flex-col gap-2 lg:gap-12 items-center justify-center lg:flex-grow w-full">
-        
+      {/* LOGO PARA PC: Oculto en móvil, visible en escritorio */}
+      <div className="hidden lg:flex items-center justify-center w-full mb-12 px-4">
+        <Link href="/">
+          <img 
+            src="/whirpool.png" 
+            alt="Whirlpool Logo" 
+            className={`object-contain transition-all duration-300 ${colapsado ? 'h-6' : 'h-10'}`} 
+          />
+        </Link>
+      </div>
+
+      <nav className="flex lg:flex-col gap-2 lg:gap-10 items-center justify-center lg:flex-grow w-full">
         {/* Dashboard */}
         <Link href="/" className="relative flex items-center justify-center w-full group">
           <div className={`flex items-center justify-center transition-all duration-300 rounded-2xl
@@ -48,7 +58,7 @@ export default function Sidebar({ colapsado }) {
           {isActive('/') && <span className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-blue-600 rounded-r-full" />}
         </Link>
 
-        {/* Admin */}
+        {/* Admin, Comunidad, Perfil se mantienen igual... */}
         {rolId === 1 && (
           <Link href="/admin" className="relative flex items-center justify-center w-full group">
             <div className={`flex items-center justify-center transition-all duration-300 rounded-2xl
@@ -61,7 +71,6 @@ export default function Sidebar({ colapsado }) {
           </Link>
         )}
 
-        {/* Comunidad */}
         <Link href="/comunidad" className="relative flex items-center justify-center w-full group">
           <div className={`flex items-center justify-center transition-all duration-300 rounded-2xl
             ${colapsado ? 'w-10 h-10 lg:w-12 lg:h-12' : 'w-12 h-12 lg:w-16 lg:h-16'} 
@@ -72,7 +81,6 @@ export default function Sidebar({ colapsado }) {
           {isActive('/comunidad') && <span className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-blue-600 rounded-r-full" />}
         </Link>
 
-        {/* Perfil */}
         <Link href="/perfil" className="relative flex items-center justify-center w-full group">
           <div className={`flex items-center justify-center transition-all duration-300 rounded-2xl
             ${colapsado ? 'w-10 h-10 lg:w-12 lg:h-12' : 'w-12 h-12 lg:w-16 lg:h-16'} 
@@ -82,7 +90,6 @@ export default function Sidebar({ colapsado }) {
           </div>
           {isActive('/perfil') && <span className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-blue-600 rounded-r-full" />}
         </Link>
-
       </nav>
 
       <button 

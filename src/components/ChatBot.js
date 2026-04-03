@@ -82,7 +82,7 @@ export default function ChatBot() {
           onClick={() => setIsOpen(true)}
           className="bg-white hover:bg-slate-50 p-0 w-16 h-16 rounded-full shadow-2xl transition-all active:scale-90 flex items-center justify-center animate-in fade-in zoom-in border border-slate-100 overflow-hidden"
         >
-          <img src="gemini.webp" alt="Gemini" className="w-full h-full object-cover" />
+          <img src="/gemini.webp" alt="Gemini" className="w-full h-full object-cover" />
         </button>
       )}
 

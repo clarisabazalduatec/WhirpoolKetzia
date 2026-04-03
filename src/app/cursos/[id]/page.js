@@ -150,4 +150,5 @@ export default function CursoDetalle(props) {
       </div>
     </div>
   );
+  
 }

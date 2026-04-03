@@ -58,14 +58,15 @@ export default function Page() {
 
   return (
     /* AÑADIDO: pb-32 en móvil y lg:pb-10 en PC para evitar que el menú tape el contenido */
-    <div className="flex-1 flex flex-col items-start justify-start p-6 md:p-10 pb-32 lg:pb-10 w-full max-w-[1600px] mx-auto">
+    <div className="flex-1 flex flex-col items-start justify-start p-6 md:p-8 pb-32 lg:pb-10 w-full max-w-[1600px]">
       <header className="mb-6 md:mb-10 text-left w-full">        
+
         <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight whitespace-nowrap">
-          {obtenerSaludo()} {nombreUsuario || 'empleado'}.
+          Tablero
         </h1>
-        
-        <p className="text-slate-500 mt-1 md:mt-2 text-sm md:text-lg font-medium">
-          Echa un vistazo a tus cursos.
+
+        <p className="text-slate-500 mt-1 md:mt-2 text-xl md:text-xl font-medium">
+          {obtenerSaludo()} {nombreUsuario || 'empleado'}, echa un vistazo a tus cursos.
         </p>
       </header>
 
@@ -81,7 +82,7 @@ export default function Page() {
             <CursoCard 
               key={curso.curso_id} 
               id={curso.curso_id} 
-              completado={curso.esCompletado === 1}
+              completado={curso.porcentaje === 100} // Usamos el porcentaje calculado en la API
               {...curso} 
             />
           ))}
