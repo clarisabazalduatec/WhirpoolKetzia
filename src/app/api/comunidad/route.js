@@ -4,13 +4,29 @@ import { NextResponse } from 'next/server';
 // OBTENER POSTS (GET)
 export async function GET() {
   try {
-    const [rows] = await pool.query(`
-      SELECT p.*, u.nombre 
+    // 1. Obtener Publicaciones
+    const [posts] = await pool.query(`
+      SELECT p.*, u.nombre, u.pfp 
       FROM Publicaciones p 
       JOIN Usuarios u ON p.usuario_id = u.usuario_id 
       ORDER BY p.fecha_publicacion DESC
     `);
-    return NextResponse.json(rows);
+
+    // 2. Obtener Comentarios
+    const [comentarios] = await pool.query(`
+      SELECT c.*, u.nombre, u.pfp 
+      FROM Comentarios c
+      JOIN Usuarios u ON c.usuario_id = u.usuario_id
+      ORDER BY c.fecha_comentario ASC
+    `);
+
+    // 3. Agrupar
+    const data = posts.map(post => ({
+      ...post,
+      comentarios: comentarios.filter(c => c.publicacion_id === post.publicacion_id)
+    }));
+
+    return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

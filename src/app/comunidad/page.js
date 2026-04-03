@@ -8,6 +8,10 @@ export default function ComunidadPage() {
   const [contenido, setContenido] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Estados para la funcionalidad de comentar
+  const [comentandoId, setComentandoId] = useState(null);
+  const [nuevoComentario, setNuevoComentario] = useState('');
+
   const fetchPosts = async () => {
     const res = await fetch('/api/comunidad');
     const data = await res.json();
@@ -39,6 +43,29 @@ export default function ComunidadPage() {
     }
   };
 
+  // Función para enviar comentario
+  const handleCommentSubmit = async (e, publicId) => {
+    e.preventDefault();
+    const uid = localStorage.getItem('usuario_id');
+    if (!nuevoComentario.trim() || !uid) return;
+
+    const res = await fetch('/api/comentarios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        usuario_id: uid, 
+        publicacion_id: publicId, 
+        contenido: nuevoComentario 
+      }),
+    });
+
+    if (res.ok) {
+      setNuevoComentario('');
+      setComentandoId(null);
+      fetchPosts();
+    }
+  };
+
   return (
     <div className="mx-auto p-6 lg:p-10">
       {/* Título de la página */}
@@ -60,18 +87,79 @@ export default function ComunidadPage() {
             </div>
           ) : (
             posts.map((post) => (
-              <article key={post.publicacion_id} className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <article key={post.publicacion_id} className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-bold">
-                    {post.nombre ? post.nombre[0].toUpperCase() : 'U'}
+                  
+                  {/* CONTENEDOR DE IMAGEN DE PERFIL */}
+                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-bold overflow-hidden shadow-sm border border-slate-100 shrink-0">
+                    {post.pfp ? (
+                      <img 
+                        src={post.pfp} 
+                        alt={post.nombre} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      /* Fallback si el usuario no tiene foto */
+                      <span>{post.nombre ? post.nombre[0].toUpperCase() : 'U'}</span>
+                    )}
                   </div>
+
                   <div>
-                    <h3 className="font-black text-slate-900 leading-none">{post.nombre}</h3>
-                    <span className="text-xs text-slate-400 font-medium">{new Date(post.fecha_publicacion).toLocaleDateString()}</span>
+                    <h3 className="font-black text-slate-900 leading-none group-hover:text-blue-600 transition-colors">
+                      {post.nombre}
+                    </h3>
+                    <span className="text-xs text-slate-400 font-medium">
+                      {new Date(post.fecha_publicacion).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
+
                 <h4 className="text-xl font-bold text-slate-900 mb-3">{post.titulo}</h4>
-                <p className="text-slate-600 leading-relaxed">{post.contenido}</p>
+                <p className="text-slate-600 leading-relaxed mb-6">{post.contenido}</p>
+
+                {/* --- SECCIÓN DE COMENTARIOS --- */}
+                <div className="border-t border-slate-50 pt-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <MessageSquare size={14} /> {post.comentarios?.length || 0} Comentarios
+                    </span>
+                    <button 
+                      onClick={() => setComentandoId(comentandoId === post.publicacion_id ? null : post.publicacion_id)}
+                      className="p-4 bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
+                    >
+                      {comentandoId === post.publicacion_id ? 'Cancelar' : 'Responder'}
+                    </button>
+                  </div>
+
+                  {/* Lista de comentarios existentes */}
+                  {post.comentarios?.map((c) => (
+                    <div key={c.comentario_id} className="flex gap-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                      <div className="w-8 h-8 rounded-xl overflow-hidden bg-white shrink-0 border border-slate-200 flex items-center justify-center font-bold text-blue-600 text-xs">
+                        {c.pfp ? <img src={c.pfp} className="w-full h-full object-cover" /> : c.nombre[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-black text-slate-900">{c.nombre}</p>
+                        <p className="text-sm text-slate-600">{c.contenido}</p>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Formulario para comentar */}
+                  {comentandoId === post.publicacion_id && (
+                    <form onSubmit={(e) => handleCommentSubmit(e, post.publicacion_id)} className="flex gap-2 mt-4">
+                      <input 
+                        className="flex-1 p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                        placeholder="Escribe una respuesta..."
+                        value={nuevoComentario}
+                        onChange={(e) => setNuevoComentario(e.target.value)}
+                        autoFocus
+                      />
+                      <button className="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 transition-colors">
+                        <Send size={16} />
+                      </button>
+                    </form>
+                  )}
+                </div>
               </article>
             ))
           )}
