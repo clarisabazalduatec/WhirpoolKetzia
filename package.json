@@ -12,6 +12,7 @@
     "@google/genai": "^1.48.0",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^7.4.2",
+    "@supabase/supabase-js": "^2.101.1",
     "bcrypt": "^6.0.0",
     "lucide-react": "^0.577.0",
     "mysql2": "^3.19.1",

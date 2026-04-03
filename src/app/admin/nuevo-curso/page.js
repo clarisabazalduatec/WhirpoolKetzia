@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Plus, X, Loader2, Image as ImageIcon, Search, FileText, HelpCircle, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Save, Plus, X, Loader2, Image as ImageIcon, Search, FileText, HelpCircle, ChevronUp, ChevronDown, Upload } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase'; 
 
 export default function NuevoCurso() {
   const router = useRouter();
@@ -12,13 +13,17 @@ export default function NuevoCurso() {
   const [quizzesDisponibles, setQuizzesDisponibles] = useState([]);
   const [filtroBiblioteca, setFiltroBiblioteca] = useState('');
   
+  // Estado para la previsualización local
+  const [previewUrl, setPreviewUrl] = useState(null);
+
   const [formData, setFormData] = useState({
     titulo: '',
     descripcion: '',
-    descripcionCorta: '', // Nuevo campo
+    descripcionCorta: '',
     imagenSrc: '',
     archivosSeleccionados: [],
-    quizzesSeleccionados: []
+    quizzesSeleccionados: [],
+    imagenFile: null
   });
 
   useEffect(() => {
@@ -34,6 +39,37 @@ export default function NuevoCurso() {
       .then(data => setQuizzesDisponibles(Array.isArray(data) ? data : []))
       .catch(() => setQuizzesDisponibles([]));
   }, [router]);
+
+  // Manejar cambio de imagen local
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({ ...formData, imagenFile: file });
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  // Función para subir a Supabase
+  const uploadImage = async (file) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    
+    // CORRECCIÓN: Quitamos el "portadas/" de aquí. 
+    // Solo dejamos el nombre del archivo.
+    const filePath = fileName; 
+
+    const { error: uploadError } = await supabase.storage
+      .from('portadas') // El nombre de tu bucket
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from('portadas')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
 
   // --- LÓGICA DE AGREGAR / QUITAR ---
   const agregarItem = (id, tipo) => {
@@ -56,7 +92,6 @@ export default function NuevoCurso() {
 
     if (nuevaPos < 0 || nuevaPos >= nuevaLista.length) return;
 
-    // Intercambio de posiciones (Swapping)
     [nuevaLista[index], nuevaLista[nuevaPos]] = [nuevaLista[nuevaPos], nuevaLista[index]];
 
     setFormData({ ...formData, [key]: nuevaLista });
@@ -67,37 +102,40 @@ export default function NuevoCurso() {
     setLoading(true);
     const usuario_id = localStorage.getItem('usuario_id');
 
-    if (formData.imagenSrc.length > 255) {
-      return alert("Error: La URL de la imagen es demasiado larga (máximo 255 caracteres).");
-    }
     if (formData.archivosSeleccionados.length === 0 && formData.quizzesSeleccionados.length === 0) {
+      setLoading(false);
       return alert("Error: El curso debe tener al menos un archivo o un quiz.");
     }
 
-
     try {
+      let finalImageUrl = formData.imagenSrc;
+
+      // Si hay un archivo seleccionado, subirlo primero
+      if (formData.imagenFile) {
+        finalImageUrl = await uploadImage(formData.imagenFile);
+      }
+
       const res = await fetch('/api/admin/cursos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, creado_por: usuario_id }),
+        body: JSON.stringify({ 
+          ...formData, 
+          imagenSrc: finalImageUrl, 
+          creado_por: usuario_id 
+        }),
       });
 
-      // 1. Obtenemos la respuesta del servidor (sea éxito o error)
       const data = await res.json();
 
       if (res.ok) {
-        // Éxito total
         router.push('/admin');
       } else {
-        // 2. ERROR CONTROLADO: Mostramos el mensaje que viene del API
-        // Por ejemplo: "Faltan campos obligatorios" o el error de MySQL
         alert(`Error: ${data.error || "No se pudo crear el curso"}`);
       }
 
     } catch (error) {
-      // 3. ERROR DE RED: Por si se cae el internet o falla el servidor totalmente
-      console.error("Error de red:", error);
-      alert("Hubo un problema de conexión con el servidor.");
+      console.error("Error:", error);
+      alert("Hubo un problema al subir la imagen o conectar con el servidor.");
     } finally {
       setLoading(false);
     }
@@ -136,7 +174,6 @@ export default function NuevoCurso() {
               placeholder="Ej: Introducción a IA"
             />
 
-            {/* NUEVO CAMPO: DESCRIPCIÓN CORTA */}
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Descripción Corta (Cards)</label>
             <input 
               className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold mb-5 text-sm"
@@ -158,27 +195,28 @@ export default function NuevoCurso() {
 
           <div className="bg-white p-7 rounded-3xl border border-slate-100 shadow-sm">
             <h3 className="text-lg font-black text-slate-900 mb-4">Portada</h3>
-            <div className="aspect-[16/10] bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden mb-4 relative">
-              {formData.imagenSrc ? (
-                <img src={formData.imagenSrc} className="w-full h-full object-cover" alt="Preview" />
+            <div className="aspect-[16/10] bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden mb-4 relative group">
+              {previewUrl ? (
+                <img src={previewUrl} className="w-full h-full object-cover" alt="Preview" />
               ) : (
                 <div className="text-slate-300 flex flex-col items-center p-6 text-center">
                   <ImageIcon size={32} className="mb-2" />
-                  <p className="text-[10px] font-black uppercase tracking-tight">Pega una URL válida</p>
+                  <p className="text-[10px] font-black uppercase tracking-tight">Selecciona una imagen</p>
                 </div>
               )}
+              {/* Overlay de subida */}
+              <label className="absolute inset-0 bg-blue-600/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer font-bold text-xs gap-2">
+                <Upload size={24} />
+                <span>Subir Imagen</span>
+                <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+              </label>
             </div>
-            <input 
-              className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="https://images.unsplash.com/..."
-              value={formData.imagenSrc}
-              onChange={(e) => setFormData({...formData, imagenSrc: e.target.value})}
-            />
+            <p className="text-[10px] text-slate-400 font-bold text-center">Recomendado: 800x500px</p>
           </div>
         </div>
 
 
-        {/* COLUMNA CENTRAL: ESTRUCTURA FINAL (Hacer funcional) */}
+        {/* COLUMNA CENTRAL: ESTRUCTURA FINAL */}
         <div className="xl:col-span-5 space-y-6">
           <div className="bg-white p-8 rounded-[2rem] border-2 border-slate-100 shadow-lg shadow-blue-50/20 min-h-[calc(100vh-200px)]">
             <div className="flex items-center justify-between mb-8">
@@ -196,28 +234,16 @@ export default function NuevoCurso() {
                 </div>
               )}
 
-              {/* Lista de Archivos Seleccionados con Controles de Orden */}
               {formData.archivosSeleccionados.map((id, index) => {
                 const archivo = archivosDisponibles.find(a => a.archivo_id === id);
                 return (
                   <div key={`sel-${id}`} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-blue-100 hover:shadow-sm transition-all group">
                     <div className="flex items-center gap-4">
-                      {/* Botones de Reordenar */}
                       <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          type="button" 
-                          onClick={() => moverItem(index, -1, 'archivo')}
-                          disabled={index === 0}
-                          className="text-slate-300 hover:text-blue-600 disabled:opacity-30"
-                        >
+                        <button type="button" onClick={() => moverItem(index, -1, 'archivo')} disabled={index === 0} className="text-slate-300 hover:text-blue-600 disabled:opacity-30">
                           <ChevronUp size={16} />
                         </button>
-                        <button 
-                          type="button" 
-                          onClick={() => moverItem(index, 1, 'archivo')}
-                          disabled={index === formData.archivosSeleccionados.length - 1}
-                          className="text-slate-300 hover:text-blue-600 disabled:opacity-30"
-                        >
+                        <button type="button" onClick={() => moverItem(index, 1, 'archivo')} disabled={index === formData.archivosSeleccionados.length - 1} className="text-slate-300 hover:text-blue-600 disabled:opacity-30">
                           <ChevronDown size={16} />
                         </button>
                       </div>
@@ -232,27 +258,16 @@ export default function NuevoCurso() {
                 );
               })}
               
-              {/* Quizzes (Normalmente van al final, pero también con opción de quitar) */}
               {formData.quizzesSeleccionados.map((id, index) => {
                 const quiz = quizzesDisponibles.find(q => q.quiz_id === id);
                 return (
                   <div key={`quiz-${id}`} className="flex items-center justify-between p-4 bg-purple-50 text-purple-900 border border-purple-100 rounded-2xl group">
                     <div className="flex items-center gap-4">
                       <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          type="button" 
-                          onClick={() => moverItem(index, -1, 'quiz')}
-                          disabled={index === 0}
-                          className="text-purple-300 hover:text-purple-600 disabled:opacity-30"
-                        >
+                        <button type="button" onClick={() => moverItem(index, -1, 'quiz')} disabled={index === 0} className="text-purple-300 hover:text-purple-600 disabled:opacity-30">
                           <ChevronUp size={16} />
                         </button>
-                        <button 
-                          type="button" 
-                          onClick={() => moverItem(index, 1, 'quiz')}
-                          disabled={index === formData.quizzesSeleccionados.length - 1}
-                          className="text-purple-300 hover:text-purple-600 disabled:opacity-30"
-                        >
+                        <button type="button" onClick={() => moverItem(index, 1, 'quiz')} disabled={index === formData.quizzesSeleccionados.length - 1} className="text-purple-300 hover:text-purple-600 disabled:opacity-30">
                           <ChevronDown size={16} />
                         </button>
                       </div>
@@ -279,7 +294,7 @@ export default function NuevoCurso() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="text"
-                placeholder="Buscar archivos de Whirlpool..."
+                placeholder="Buscar archivos..."
                 className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
                 onChange={(e) => setFiltroBiblioteca(e.target.value)}
               />

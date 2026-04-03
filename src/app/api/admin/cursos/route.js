@@ -1,6 +1,25 @@
 import { pool } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
+const handleUploadImage = async (file) => {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Math.random()}.${fileExt}`; // Nombre aleatorio para evitar duplicados
+  const filePath = `${fileName}`;
+
+  const { data, error } = await supabase.storage
+    .from('portadas') // El nombre que pusiste en el paso 1
+    .upload(filePath, file);
+
+  if (error) throw error;
+
+  // Obtener la URL pública
+  const { data: { publicUrl } } = supabase.storage
+    .from('portadas')
+    .getPublicUrl(filePath);
+
+  return publicUrl;
+};
+
 export async function POST(request) {
   const connection = await pool.getConnection();
   
