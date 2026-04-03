@@ -6,6 +6,9 @@ import { ArrowLeft, Save, Plus, X, Loader2, Image as ImageIcon, Search, FileText
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase'; 
 
+// URL por defecto definida fuera del componente
+const DEFAULT_COURSE_IMAGE = "https://erarmlxcjcwpkxazijam.supabase.co/storage/v1/object/public/portadas/Curso%20sin%20portada.png";
+
 export default function NuevoCurso() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -13,8 +16,8 @@ export default function NuevoCurso() {
   const [quizzesDisponibles, setQuizzesDisponibles] = useState([]);
   const [filtroBiblioteca, setFiltroBiblioteca] = useState('');
   
-  // Estado para la previsualización local
-  const [previewUrl, setPreviewUrl] = useState(null);
+  // Inicializamos previewUrl con la imagen default
+  const [previewUrl, setPreviewUrl] = useState(DEFAULT_COURSE_IMAGE);
 
   const [formData, setFormData] = useState({
     titulo: '',
@@ -40,7 +43,6 @@ export default function NuevoCurso() {
       .catch(() => setQuizzesDisponibles([]));
   }, [router]);
 
-  // Manejar cambio de imagen local
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -49,17 +51,13 @@ export default function NuevoCurso() {
     }
   };
 
-  // Función para subir a Supabase
   const uploadImage = async (file) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
-    
-    // CORRECCIÓN: Quitamos el "portadas/" de aquí. 
-    // Solo dejamos el nombre del archivo.
     const filePath = fileName; 
 
     const { error: uploadError } = await supabase.storage
-      .from('portadas') // El nombre de tu bucket
+      .from('portadas')
       .upload(filePath, file);
 
     if (uploadError) throw uploadError;
@@ -71,7 +69,6 @@ export default function NuevoCurso() {
     return data.publicUrl;
   };
 
-  // --- LÓGICA DE AGREGAR / QUITAR ---
   const agregarItem = (id, tipo) => {
     const key = tipo === 'archivo' ? 'archivosSeleccionados' : 'quizzesSeleccionados';
     if (!formData[key].includes(id)) {
@@ -84,16 +81,12 @@ export default function NuevoCurso() {
     setFormData({ ...formData, [key]: formData[key].filter(itemId => itemId !== id) });
   };
 
-  // --- LÓGICA DE REORDENAMIENTO (NUEVA) ---
   const moverItem = (index, direccion, tipo) => {
     const key = tipo === 'archivo' ? 'archivosSeleccionados' : 'quizzesSeleccionados';
     const nuevaLista = [...formData[key]];
     const nuevaPos = index + direccion;
-
     if (nuevaPos < 0 || nuevaPos >= nuevaLista.length) return;
-
     [nuevaLista[index], nuevaLista[nuevaPos]] = [nuevaLista[nuevaPos], nuevaLista[index]];
-
     setFormData({ ...formData, [key]: nuevaLista });
   };
 
@@ -108,11 +101,13 @@ export default function NuevoCurso() {
     }
 
     try {
-      let finalImageUrl = formData.imagenSrc;
+      // Lógica de imagen: Si hay archivo se sube, si no se usa la default
+      let finalImageUrl = DEFAULT_COURSE_IMAGE;
 
-      // Si hay un archivo seleccionado, subirlo primero
       if (formData.imagenFile) {
         finalImageUrl = await uploadImage(formData.imagenFile);
+      } else if (formData.imagenSrc) {
+        finalImageUrl = formData.imagenSrc;
       }
 
       const res = await fetch('/api/admin/cursos', {
@@ -126,16 +121,14 @@ export default function NuevoCurso() {
       });
 
       const data = await res.json();
-
       if (res.ok) {
         router.push('/admin');
       } else {
         alert(`Error: ${data.error || "No se pudo crear el curso"}`);
       }
-
     } catch (error) {
       console.error("Error:", error);
-      alert("Hubo un problema al subir la imagen o conectar con el servidor.");
+      alert("Hubo un problema al procesar la solicitud.");
     } finally {
       setLoading(false);
     }
@@ -149,7 +142,6 @@ export default function NuevoCurso() {
   return (
     <div className="w-full min-h-screen font-sans p-6 lg:p-8">
       
-      {/* Header */}
       <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
         <Link href="/admin" className="flex items-center gap-2 text-slate-400 hover:text-blue-600 font-bold transition-colors group">
           <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> Volver
@@ -162,7 +154,6 @@ export default function NuevoCurso() {
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         
-        {/* COLUMNA IZQUIERDA: CONFIGURACIÓN BASE */}
         <div className="xl:col-span-3 space-y-6">
           <div className="bg-white p-7 rounded-3xl border border-slate-100 shadow-sm">
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Título del Curso</label>
@@ -196,27 +187,19 @@ export default function NuevoCurso() {
           <div className="bg-white p-7 rounded-3xl border border-slate-100 shadow-sm">
             <h3 className="text-lg font-black text-slate-900 mb-4">Portada</h3>
             <div className="aspect-[16/10] bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden mb-4 relative group">
-              {previewUrl ? (
-                <img src={previewUrl} className="w-full h-full object-cover" alt="Preview" />
-              ) : (
-                <div className="text-slate-300 flex flex-col items-center p-6 text-center">
-                  <ImageIcon size={32} className="mb-2" />
-                  <p className="text-[10px] font-black uppercase tracking-tight">Selecciona una imagen</p>
-                </div>
-              )}
-              {/* Overlay de subida */}
+              {/* Siempre habrá una previewUrl porque se inicializa con la default */}
+              <img src={previewUrl} className="w-full h-full object-cover" alt="Preview" />
+              
               <label className="absolute inset-0 bg-blue-600/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer font-bold text-xs gap-2">
                 <Upload size={24} />
-                <span>Subir Imagen</span>
+                <span>Cambiar Imagen</span>
                 <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
               </label>
             </div>
-            <p className="text-[10px] text-slate-400 font-bold text-center">Recomendado: 800x500px</p>
+            <p className="text-[10px] text-slate-400 font-bold text-center italic">Si no seleccionas ninguna, se usará la imagen por defecto.</p>
           </div>
         </div>
 
-
-        {/* COLUMNA CENTRAL: ESTRUCTURA FINAL */}
         <div className="xl:col-span-5 space-y-6">
           <div className="bg-white p-8 rounded-[2rem] border-2 border-slate-100 shadow-lg shadow-blue-50/20 min-h-[calc(100vh-200px)]">
             <div className="flex items-center justify-between mb-8">
@@ -230,20 +213,20 @@ export default function NuevoCurso() {
               {formData.archivosSeleccionados.length === 0 && formData.quizzesSeleccionados.length === 0 && (
                 <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-100">
                     <FileText className="mx-auto text-slate-300 mb-4" size={40} />
-                    <p className="text-slate-400 font-bold max-w-xs mx-auto">Tu curso está vacío. Añade materiales desde la biblioteca a la derecha.</p>
+                    <p className="text-slate-400 font-bold max-w-xs mx-auto">Tu curso está vacío.</p>
                 </div>
               )}
 
               {formData.archivosSeleccionados.map((id, index) => {
                 const archivo = archivosDisponibles.find(a => a.archivo_id === id);
                 return (
-                  <div key={`sel-${id}`} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-blue-100 hover:shadow-sm transition-all group">
+                  <div key={`sel-${id}`} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-blue-100 group">
                     <div className="flex items-center gap-4">
                       <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button type="button" onClick={() => moverItem(index, -1, 'archivo')} disabled={index === 0} className="text-slate-300 hover:text-blue-600 disabled:opacity-30">
+                        <button type="button" onClick={() => moverItem(index, -1, 'archivo')} disabled={index === 0} className="text-slate-300 hover:text-blue-600">
                           <ChevronUp size={16} />
                         </button>
-                        <button type="button" onClick={() => moverItem(index, 1, 'archivo')} disabled={index === formData.archivosSeleccionados.length - 1} className="text-slate-300 hover:text-blue-600 disabled:opacity-30">
+                        <button type="button" onClick={() => moverItem(index, 1, 'archivo')} disabled={index === formData.archivosSeleccionados.length - 1} className="text-slate-300 hover:text-blue-600">
                           <ChevronDown size={16} />
                         </button>
                       </div>
@@ -251,7 +234,7 @@ export default function NuevoCurso() {
                       <FileText size={18} className="text-blue-500" />
                       <p className="font-bold text-slate-800 text-sm">{archivo?.nombre_archivo}</p>
                     </div>
-                    <button type="button" onClick={() => quitarItem(id, 'archivo')} className="p-2 bg-slate-100 text-slate-400 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors">
+                    <button type="button" onClick={() => quitarItem(id, 'archivo')} className="p-2 text-slate-400 hover:text-red-500">
                       <X size={16} />
                     </button>
                   </div>
@@ -264,17 +247,17 @@ export default function NuevoCurso() {
                   <div key={`quiz-${id}`} className="flex items-center justify-between p-4 bg-purple-50 text-purple-900 border border-purple-100 rounded-2xl group">
                     <div className="flex items-center gap-4">
                       <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button type="button" onClick={() => moverItem(index, -1, 'quiz')} disabled={index === 0} className="text-purple-300 hover:text-purple-600 disabled:opacity-30">
+                        <button type="button" onClick={() => moverItem(index, -1, 'quiz')} disabled={index === 0} className="text-purple-300 hover:text-purple-600">
                           <ChevronUp size={16} />
                         </button>
-                        <button type="button" onClick={() => moverItem(index, 1, 'quiz')} disabled={index === formData.quizzesSeleccionados.length - 1} className="text-purple-300 hover:text-purple-600 disabled:opacity-30">
+                        <button type="button" onClick={() => moverItem(index, 1, 'quiz')} disabled={index === formData.quizzesSeleccionados.length - 1} className="text-purple-300 hover:text-purple-600">
                           <ChevronDown size={16} />
                         </button>
                       </div>
                       <HelpCircle size={18} className="text-purple-600" />
-                      <p className="font-bold text-sm">{quiz?.titulo} (Examen Final)</p>
+                      <p className="font-bold text-sm">{quiz?.titulo}</p>
                     </div>
-                    <button type="button" onClick={() => quitarItem(id, 'quiz')} className="p-2 bg-white text-purple-400 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors">
+                    <button type="button" onClick={() => quitarItem(id, 'quiz')} className="p-2 text-purple-400 hover:text-red-500">
                       <X size={16} />
                     </button>
                   </div>
@@ -284,23 +267,20 @@ export default function NuevoCurso() {
           </div>
         </div>
 
-
-        {/* COLUMNA DERECHA: BIBLIOTECA GLOBAL */}
         <div className="xl:col-span-4 space-y-6">
           <div className="bg-white p-7 rounded-3xl border border-slate-100 shadow-sm sticky top-8">
             <h2 className="text-xl font-black text-slate-900 mb-5">Biblioteca Global</h2>
-
             <div className="relative mb-6">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="text"
                 placeholder="Buscar archivos..."
-                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                 onChange={(e) => setFiltroBiblioteca(e.target.value)}
               />
             </div>
 
-            <div className="max-h-[40vh] overflow-y-auto pr-2 space-y-2.5 mb-8 custom-scrollbar">
+            <div className="max-h-[40vh] overflow-y-auto pr-2 space-y-2.5 mb-8">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Archivos</p>
               {archivosFiltrados.length > 0 ? archivosFiltrados.map(archivo => (
                 <button
@@ -313,7 +293,7 @@ export default function NuevoCurso() {
                   <Plus size={16} className="text-slate-300 group-hover:text-white shrink-0" />
                 </button>
               )) : (
-                <p className="text-xs text-slate-400 font-medium text-center py-6 italic">No hay archivos coincidentes</p>
+                <p className="text-xs text-slate-400 font-medium text-center py-6">No hay archivos</p>
               )}
             </div>
 

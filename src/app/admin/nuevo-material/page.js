@@ -21,7 +21,7 @@ export default function NuevoMaterial() {
   const [formData, setFormData] = useState({
     nombre_archivo: '',
     tipo_archivo: 'PDF',
-    descripcion: '', // <--- NUEVO CAMPO
+    descripcion: '', 
     url_archivo: '',
   });
 
@@ -33,7 +33,7 @@ export default function NuevoMaterial() {
         setFormData(prev => ({ ...prev, nombre_archivo: file.name.split('.')[0] }));
       }
       const ext = file.name.split('.').pop().toUpperCase();
-      const validTypes = ['PDF', 'MP4', 'DOCX', 'PNG', 'JPG'];
+      const validTypes = ['PDF', 'MP4'];
       if (validTypes.includes(ext)) {
         setFormData(prev => ({ ...prev, tipo_archivo: ext }));
       }
@@ -41,15 +41,21 @@ export default function NuevoMaterial() {
   };
 
   const uploadFileToSupabase = async (file) => {
+    const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
-    const filePath = `materiales/${fileName}`;
+    
+    const filePath = fileName; 
+
     const { error: uploadError } = await supabase.storage
-      .from('portadas')
+      .from('material')
       .upload(filePath, file);
 
     if (uploadError) throw uploadError;
 
-    const { data } = supabase.storage.from('portadas').getPublicUrl(filePath);
+    const { data } = supabase.storage
+      .from('material')
+      .getPublicUrl(filePath);
+
     return data.publicUrl;
   };
 

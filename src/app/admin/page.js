@@ -29,13 +29,12 @@ export default function AdminDashboard() {
     if (!isInitial) setIsUpdating(true);
 
     try {
-      // 1. Cargar Cursos y Materiales (Solo en carga inicial)
       if (isInitial) {
         const [resCursos, resMateriales, resAlumnos, resExamenes] = await Promise.all([
             fetch('/api/admin/dashboard'),
             fetch('/api/admin/archivos'),
             fetch('/api/admin/usuarios'),
-            fetch('/api/admin/quizzes') // Nueva ruta para exámenes
+            fetch('/api/admin/quizzes')
         ]);
 
         // ... (dataCursos, dataMateriales, dataAlumnos)
@@ -139,6 +138,7 @@ export default function AdminDashboard() {
                 <thead>
                   <tr className="bg-slate-50/50">
                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Curso</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Descripción</th>
                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Creador</th>
                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Acciones</th>
                   </tr>
@@ -158,6 +158,9 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="px-8 py-6">
+                        <p className="text-sm font-bold text-slate-600">{curso.descripcion || 'Sin descripcion'}</p>
+                      </td>
+                      <td className="px-8 py-6">
                         <p className="text-sm font-bold text-slate-600">{curso.nombre_creador || 'Sistema'}</p>
                       </td>
                       <td className="px-8 py-6 text-right">
@@ -175,6 +178,7 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
+            
           </div>
 
           {/* SECCIÓN 2: BIBLIOTECA DE MATERIALES (APARTADO NUEVO) */}
