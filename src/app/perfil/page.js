@@ -1,23 +1,100 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Mail, Shield, Calendar, BookOpen, CheckCircle, LogOut, Award } from 'lucide-react';
+import { User, Mail, Shield, Calendar, BookOpen, CheckCircle, LogOut, Award, Edit3, Save, X, Camera, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export default function PerfilPage() {
   const [datos, setDatos] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
+  // Estados para el formulario
+  const [nuevoNombre, setNuevoNombre] = useState('');
+  const [previewPfp, setPreviewPfp] = useState(null);
+  const [filePfp, setFilePfp] = useState(null);
+
+  const fetchDatos = async () => {
     const usuarioId = localStorage.getItem('usuario_id');
     if (!usuarioId) { router.push('/login'); return; }
 
-    fetch(`/api/perfil?id=${usuarioId}`)
-      .then(res => res.json())
-      .then(data => { setDatos(data); setLoading(false); })
-      .catch(err => { console.error(err); setLoading(false); });
-  }, [router]);
+    try {
+      const res = await fetch(`/api/perfil?id=${usuarioId}`);
+      const data = await res.json();
+      setDatos(data);
+      setNuevoNombre(data.usuario.nombre);
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchDatos(); }, []);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFilePfp(file);
+      setPreviewPfp(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadPfp = async (file, userId) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `avatar_${userId}_${Date.now()}.${fileExt}`;
+    const filePath = fileName; // Se guarda en la raíz del bucket
+
+    const { error: uploadError } = await supabase.storage
+      .from('pfps') 
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage.from('pfps').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const handleSave = async () => {
+    if (!nuevoNombre.trim()) return alert("El nombre no puede estar vacío");
+    
+    setSaving(true);
+    const userId = localStorage.getItem('usuario_id');
+    
+    try {
+      let pfpUrl = datos.usuario.pfp; // Por defecto mantenemos la actual
+
+      if (filePfp) {
+        pfpUrl = await uploadPfp(filePfp, userId);
+      }
+
+      const res = await fetch('/api/perfil', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuario_id: userId,
+          nombre: nuevoNombre,
+          pfp: pfpUrl
+        }),
+      });
+
+      if (res.ok) {
+        setEditMode(false);
+        setFilePfp(null);
+        await fetchDatos(); // Recargar datos frescos de la DB
+      } else {
+        throw new Error("Error al actualizar");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error al guardar los cambios");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -37,36 +114,82 @@ export default function PerfilPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 lg:p-10 pb-32 relative">
-      
-      {/* --- BOTÓN FLOTANTE (PC) --- */}
-      <div className="hidden lg:block fixed bottom-10 left-10 z-50">
-        <button 
-          onClick={handleLogout}
-          className="group bg-white hover:bg-red-50 text-slate-400 hover:text-red-600 p-4 rounded-full shadow-2xl border border-slate-100 transition-all flex items-center gap-0 hover:gap-3 overflow-hidden max-w-[60px] hover:max-w-[200px]"
-        >
-          <LogOut size={24} />
-          <span className="whitespace-nowrap font-black text-sm opacity-0 group-hover:opacity-100 transition-all">
-            Cerrar Sesión
-          </span>
-        </button>
-      </div>
 
       {/* Header de Perfil */}
       <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200 mb-10 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
-        <div className="w-32 h-32 bg-blue-600 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-blue-100 shrink-0 rotate-3">
-          <User size={60} className="-rotate-3" />
+        
+        {/* Avatar con lógica de edición */}
+        <div className="relative group shrink-0">
+          <div className="w-32 h-32 bg-blue-600 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-blue-100 overflow-hidden border-4 border-white rotate-3 group-hover:rotate-0 transition-transform duration-500">
+            {previewPfp || usuario.pfp ? (
+              <img 
+                src={previewPfp || usuario.pfp} 
+                /* CAMBIO: Se añadió scale-125 para que la imagen sea más grande y cubra los bordes al rotar */
+                className="w-full h-full object-cover scale-105 -rotate-3 group-hover:rotate-0 group-hover:scale-105 transition-all duration-500" 
+                alt="Avatar" 
+              />
+            ) : (
+              <User size={60} className="-rotate-3 group-hover:rotate-0 transition-transform duration-500" />
+            )}
+          </div>
+          
+          {/* El label de edición también necesita el scale o un tamaño que cubra todo */}
+          {editMode && (
+            <label className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 text-white rounded-3xl cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera size={24} />
+              <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+            </label>
+          )}
         </div>
 
         <div className="text-center md:text-left flex-grow z-10">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">{usuario.nombre}</h1>
+          {editMode ? (
+            <input 
+              className="text-4xl font-black text-slate-900 tracking-tight bg-slate-50 border-b-2 border-blue-500 outline-none w-full max-w-md px-2"
+              value={nuevoNombre}
+              onChange={(e) => setNuevoNombre(e.target.value)}
+              autoFocus
+            />
+          ) : (
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight">{usuario.nombre}</h1>
+          )}
+          
           <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-3">
             <span className="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest flex items-center gap-1.5 shadow-md shadow-blue-100">
-              <Shield size={12} /> {usuario.nombre_rol}
+              {usuario.nombre_rol}
             </span>
             <span className="text-slate-400 text-sm font-bold flex items-center gap-1.5">
               <Calendar size={16} /> Miembro desde {new Date(usuario.fecha_creacion).toLocaleDateString()}
             </span>
           </div>
+        </div>
+
+        {/* Botones de Control de Edición */}
+        <div className="flex gap-2">
+          {editMode ? (
+            <>
+              <button 
+                onClick={handleSave} 
+                disabled={saving}
+                className="bg-emerald-500 text-white p-4 rounded-2xl shadow-lg hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+              </button>
+              <button 
+                onClick={() => { setEditMode(false); setPreviewPfp(null); setNuevoNombre(usuario.nombre); }} 
+                className="bg-slate-100 text-slate-500 p-4 rounded-2xl hover:bg-slate-200 transition-all"
+              >
+                <X size={20} />
+              </button>
+            </>
+          ) : (
+            <button 
+              onClick={() => setEditMode(true)}
+              className="bg-white text-blue-600 border border-blue-100 p-4 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center gap-2 font-black text-xs uppercase tracking-widest"
+            >
+              <Edit3 size={18} /> Editar Perfil
+            </button>
+          )}
         </div>
       </div>
 
@@ -86,24 +209,15 @@ export default function PerfilPage() {
               <div className="bg-emerald-100 text-emerald-600 p-4 rounded-2xl"><CheckCircle size={28} /></div>
               <div>
                 <p className="text-3xl font-black text-slate-900 leading-none">{stats.total_completados}</p>
-                <p className="text-slate-400 text-xs font-black uppercase mt-1">Finalizados</p>
+                <p className="text-slate-400 text-xs font-black uppercase mt-1">Finalizado(s)</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
-            <Award className="absolute right-[-20px] bottom-[-20px] text-white/10" size={180} />
-            <h3 className="text-xl font-black mb-2 flex items-center gap-2">Nivel de Aprendizaje</h3>
-            <p className="text-slate-400 text-sm mb-6 max-w-xs font-medium">Sigue completando cursos para subir de nivel.</p>
-            <div className="bg-white/10 h-2 rounded-full w-full overflow-hidden">
-                <div className="bg-blue-500 h-full w-[75%]" />
-            </div>
-          </div>
         </div>
 
         {/* COLUMNA DERECHA */}
         <aside className="w-full lg:w-[40%] space-y-6">
-          {/* Tarjeta de Datos de Cuenta */}
           <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200">
             <h2 className="text-xl font-black text-slate-900 mb-8 border-b border-slate-100 pb-4 italic">
                 Datos de la Cuenta
@@ -118,18 +232,10 @@ export default function PerfilPage() {
               </div>
 
               <div className="group">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">ID Corporativo</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">ID en la plataforma</p>
                 <p className="text-slate-900 font-mono font-black text-lg">
-                  #WHL-{usuario.usuario_id.toString().padStart(4, '0')}
+                  #ID-{usuario.usuario_id.toString()}
                 </p>
-              </div>
-
-              <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
-                <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Estado</p>
-                    <p className="text-emerald-600 font-black text-sm italic">Cuenta Verificada</p>
-                </div>
-                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
               </div>
             </div>
           </div>

@@ -34,3 +34,26 @@ export async function GET(request) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
+
+export async function PUT(request) {
+  try {
+    const body = await request.json();
+    const { usuario_id, nombre, pfp } = body;
+
+    if (!usuario_id || !nombre) {
+      return NextResponse.json({ message: 'Datos insuficientes' }, { status: 400 });
+    }
+
+    // Actualizamos el usuario. 
+    // Si pfp viene como null o undefined, mantenemos la que ya tiene.
+    await pool.query(
+      `UPDATE Usuarios SET nombre = ?, pfp = COALESCE(?, pfp) WHERE usuario_id = ?`,
+      [nombre, pfp, usuario_id]
+    );
+
+    return NextResponse.json({ message: 'Perfil actualizado correctamente' });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ message: error.message }, { status: 500 });
+  }
+}
