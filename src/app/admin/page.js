@@ -12,6 +12,8 @@ export default function AdminDashboard() {
   const [selectedAlumno, setSelectedAlumno] = useState('global');
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [examenes, setExamenes] = useState([]);
+
   const [stats, setStats] = useState({
     totalCursos: 0,
     totalAlumnos: 0,
@@ -29,20 +31,24 @@ export default function AdminDashboard() {
     try {
       // 1. Cargar Cursos y Materiales (Solo en carga inicial)
       if (isInitial) {
-        const [resCursos, resMateriales, resAlumnos] = await Promise.all([
-          fetch('/api/admin/dashboard'),
-          fetch('/api/admin/archivos'), // Asumiendo que esta es tu ruta de biblioteca
-          fetch('/api/admin/usuarios')
+        const [resCursos, resMateriales, resAlumnos, resExamenes] = await Promise.all([
+            fetch('/api/admin/dashboard'),
+            fetch('/api/admin/archivos'),
+            fetch('/api/admin/usuarios'),
+            fetch('/api/admin/quizzes') // Nueva ruta para exámenes
         ]);
 
+        // ... (dataCursos, dataMateriales, dataAlumnos)
         const dataCursos = await resCursos.json();
         const dataMateriales = await resMateriales.json();
-        const dataAlumnos = await resAlumnos.json();
+        const dataAlumnos = await resAlumnos.json(); 
+        const dataExamenes = await resExamenes.json();
 
         setCursos(Array.isArray(dataCursos) ? dataCursos : []);
         setMateriales(Array.isArray(dataMateriales) ? dataMateriales : []);
         setAlumnos(dataAlumnos);
-      }
+        setExamenes(Array.isArray(dataExamenes) ? dataExamenes : []);
+    }
 
       // 2. Cargar Estadísticas (Siempre se actualizan)
       const urlStats = alumnoId === 'global' 
@@ -209,7 +215,43 @@ export default function AdminDashboard() {
               )}
             </div>
           </div>
+
+          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-white">
+              <h2 className="text-xl font-black text-slate-800 flex items-center gap-2 p-2">
+                Exámenes Disponibles
+                <span className="text-xs font-bold bg-purple-100 text-purple-400 px-3 py-1 rounded-full">{examenes.length}</span>
+              </h2>
+              <Link 
+                href="/admin/nuevo-examen" 
+                className="bg-purple-600 text-white px-6 py-3 rounded-[2.5rem] font-black flex items-center gap-2 hover:bg-purple-700 transition-all shadow-xl shadow-purple-100 active:scale-95 text-sm"
+              >
+                <Plus size={18} /> Crear Examen
+              </Link>
+            </div>
+            
+            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {examenes.length > 0 ? examenes.map((ex) => (
+                <div key={ex.quiz_id} className="flex items-center justify-between p-4 bg-purple-50/30 border border-purple-100 rounded-2xl hover:bg-white transition-all group">
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <p className="font-bold text-slate-800 text-sm">{ex.titulo}</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase">{ex.total_preguntas || 0} Preguntas</p>
+                    </div>
+                  </div>
+                  <Link href={`/admin/editar-examen/${ex.quiz_id}`} className="p-2 text-slate-300 hover:text-purple-600">
+                    <ChevronRight size={18} />
+                  </Link>
+                </div>
+              )) : (
+                <div className="col-span-full py-10 text-center text-slate-400 italic">No hay exámenes creados.</div>
+              )}
+            </div>
+          </div>
+
         </div>
+
+
 
         {/* COLUMNA DERECHA: STATS */}
         <aside className="xl:col-span-4 space-y-6 sticky top-10">
