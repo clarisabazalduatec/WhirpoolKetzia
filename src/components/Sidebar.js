@@ -1,5 +1,7 @@
 "use client";
 
+// Agrega este import arriba junto a los otros imports
+import { signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -21,11 +23,10 @@ export default function Sidebar({ colapsado }) {
 
   const isActive = (path) => pathname === path;
 
-  const handleLogout = () => {
-    localStorage.clear();
-    router.push('/login');
-    router.refresh();
-  };
+  const handleLogout = async () => {
+  localStorage.clear();
+  await signOut({ callbackUrl: '/login' });
+};
 
   if (!isMounted) return null;
 

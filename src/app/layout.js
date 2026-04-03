@@ -4,12 +4,12 @@ import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import ChatBot from '@/components/ChatBot';
+import Providers from './providers';
 import './globals.css';
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
 
-  // 1. Centro de mando de rutas
   const configRutas = {
     isLogin: pathname === '/login',
     isRegistro: pathname === '/registro',
@@ -20,8 +20,6 @@ export default function RootLayout({ children }) {
     isAdmin: pathname.includes('/admin', '/admin/')
   };
 
-
-  // Definimos los nombres según la ruta
   const nombresRutas = {
     '/': 'Whirlpool Learning',
     '/login': 'Iniciar Sesión',
@@ -31,20 +29,14 @@ export default function RootLayout({ children }) {
     '/admin': 'Admin',
   };
 
-  // Buscamos si la ruta actual existe en nuestro mapa, si no, usamos un genérico
   const tituloActual = nombresRutas[pathname] || 'Whirlpool Learning';
 
-  // 2. Lógica de componentes
   const mostrarSidebar = !configRutas.isLogin && !configRutas.isRegistro; 
   const mostrarChatbot = !configRutas.isLogin && !configRutas.isRegistro; 
   const mostrarHeader = !configRutas.isLogin && !configRutas.isVisor && !configRutas.isRegistro && !configRutas.isQuiz;
   const colapsarSidebar = configRutas.isComunidad || configRutas.isVisor || configRutas.isProfile || configRutas.isAdmin || configRutas.isQuiz;
   
-  // 3. Clases dinámicas para el Sidebar y el Contenedor
   const anchoSidebar = colapsarSidebar ? 'lg:pl-20' : 'lg:pl-32'; 
-  
-  // Si sientes que sigue habiendo mucho espacio, puedes probar con valores menores:
-  // const anchoSidebar = colapsarSidebar ? 'lg:pl-24' : 'lg:pl-36';
 
   return (
     <html lang="es">
@@ -53,19 +45,20 @@ export default function RootLayout({ children }) {
         <meta name="description" content="Sistema de capacitación interna" />
       </head>
       <body className="bg-slate-50 antialiased overflow-x-hidden"> 
-        {mostrarSidebar && <Sidebar colapsado={colapsarSidebar} />}
+        <Providers>
+          {mostrarSidebar && <Sidebar colapsado={colapsarSidebar} />}
 
-        {/* Cambiamos el padding para que sea más ajustado al Sidebar real */}
-        <div className={`min-h-screen flex flex-col transition-all duration-500 ease-in-out ${mostrarSidebar ? (colapsarSidebar ? 'lg:pl-20' : 'lg:pl-32') : ''}`}>
-          
-          {mostrarHeader && <Header />}
-          
-          <main className="flex-1">
-            {children}
-          </main>
+          <div className={`min-h-screen flex flex-col transition-all duration-500 ease-in-out ${mostrarSidebar ? (colapsarSidebar ? 'lg:pl-20' : 'lg:pl-32') : ''}`}>
+            
+            {mostrarHeader && <Header />}
+            
+            <main className="flex-1">
+              {children}
+            </main>
 
-          {mostrarChatbot && <ChatBot/>}
-        </div>
+            {mostrarChatbot && <ChatBot/>}
+          </div>
+        </Providers>
       </body>
     </html>
   );
