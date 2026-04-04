@@ -125,7 +125,7 @@ export default function PerfilPage() {
               <img 
                 src={previewPfp || usuario.pfp} 
                 /* CAMBIO: Se añadió scale-125 para que la imagen sea más grande y cubra los bordes al rotar */
-                className="w-full h-full object-cover scale-105 -rotate-3 group-hover:rotate-0 group-hover:scale-105 transition-all duration-500" 
+                className="w-full h-full object-cover scale-110 -rotate-3 group-hover:rotate-0 group-hover:scale-105 transition-all duration-500" 
                 alt="Avatar" 
               />
             ) : (
