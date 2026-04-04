@@ -8,14 +8,12 @@ export async function GET(request) {
   if (!usuarioId) return NextResponse.json({ message: 'No ID' }, { status: 400 });
 
   try {
-    // 1. Datos del usuario
     const [userRows] = await pool.query(`
       SELECT u.*, r.nombre as nombre_rol 
       FROM Usuarios u
       JOIN Roles r ON u.rol_id = r.rol_id
       WHERE u.usuario_id = ?`, [usuarioId]);
 
-    // 2. Estadísticas
     const [statsRows] = await pool.query(`
       SELECT 
         (SELECT COUNT(*) FROM Inscripciones WHERE usuario_id = ?) as total_inscritos,
@@ -24,11 +22,23 @@ export async function GET(request) {
          WHERE i.usuario_id = ?) as total_completados
     `, [usuarioId, usuarioId]);
 
+    // Cursos del usuario
+    const [cursosRows] = await pool.query(`
+      SELECT c.curso_id, c.titulo, c.imagenSrc, c.descripcionCorta, i.estado,
+        CASE WHEN comp.completacion_id IS NOT NULL THEN 1 ELSE 0 END as completado
+      FROM Inscripciones i
+      JOIN Cursos c ON i.curso_id = c.curso_id
+      LEFT JOIN Completaciones comp ON comp.inscripcion_id = i.inscripcion_id
+      WHERE i.usuario_id = ?
+      ORDER BY completado ASC
+    `, [usuarioId]);
+
     if (userRows.length === 0) return NextResponse.json({ message: 'No encontrado' }, { status: 404 });
 
     return NextResponse.json({
       usuario: userRows[0],
-      stats: statsRows[0]
+      stats: statsRows[0],
+      cursos: cursosRows
     });
   } catch (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -38,17 +48,15 @@ export async function GET(request) {
 export async function PUT(request) {
   try {
     const body = await request.json();
-    const { usuario_id, nombre, pfp } = body;
+    const { usuario_id, alias, pfp } = body;
 
-    if (!usuario_id || !nombre) {
+    if (!usuario_id) {
       return NextResponse.json({ message: 'Datos insuficientes' }, { status: 400 });
     }
 
-    // Actualizamos el usuario. 
-    // Si pfp viene como null o undefined, mantenemos la que ya tiene.
     await pool.query(
-      `UPDATE Usuarios SET nombre = ?, pfp = COALESCE(?, pfp) WHERE usuario_id = ?`,
-      [nombre, pfp, usuario_id]
+      `UPDATE Usuarios SET alias = COALESCE(?, alias), pfp = COALESCE(?, pfp) WHERE usuario_id = ?`,
+      [alias || null, pfp || null, usuario_id]
     );
 
     return NextResponse.json({ message: 'Perfil actualizado correctamente' });

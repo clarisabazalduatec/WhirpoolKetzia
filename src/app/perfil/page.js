@@ -76,7 +76,7 @@ export default function PerfilPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           usuario_id: userId,
-          nombre: nuevoNombre,
+          alias: nuevoNombre,
           pfp: pfpUrl
         }),
       });
@@ -144,15 +144,27 @@ export default function PerfilPage() {
 
         <div className="text-center md:text-left flex-grow z-10">
           {editMode ? (
-            <input 
-              className="text-4xl font-black text-slate-900 tracking-tight bg-slate-50 border-b-2 border-blue-500 outline-none w-full max-w-md px-2"
-              value={nuevoNombre}
-              onChange={(e) => setNuevoNombre(e.target.value)}
-              autoFocus
-            />
-          ) : (
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight">{usuario.nombre}</h1>
-          )}
+  <div className="space-y-2">
+    <h1 className="text-4xl font-black text-slate-900 tracking-tight">{usuario.nombre}</h1>
+    <input 
+      className="text-lg font-bold text-slate-500 bg-slate-50 border-b-2 border-blue-500 outline-none w-full max-w-md px-2 py-1"
+      value={nuevoNombre}
+      onChange={(e) => setNuevoNombre(e.target.value)}
+      placeholder="Escribe tu alias..."
+      autoFocus
+    />
+    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Alias público</p>
+  </div>
+) : (
+  <div>
+    <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+      {usuario.alias || usuario.nombre}
+    </h1>
+    {usuario.alias && (
+      <p className="text-slate-400 text-sm font-medium mt-1">{usuario.nombre}</p>
+    )}
+  </div>
+)}
           
           <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-3">
             <span className="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest flex items-center gap-1.5 shadow-md shadow-blue-100">

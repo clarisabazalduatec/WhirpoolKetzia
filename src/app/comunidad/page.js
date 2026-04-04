@@ -165,7 +165,9 @@ export default function ComunidadPage() {
                       {post.pfp ? <img src={post.pfp} className="w-full h-full object-cover" alt="" /> : <span>{post.nombre?.[0]}</span>}
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm font-black text-slate-900">{post.nombre}</span>
+                      <Link href={`/perfil/${post.usuario_id}`} className="text-sm font-black text-slate-900 hover:text-blue-600 transition-colors">
+                        {post.nombre}
+                      </Link>
                       <span className="text-[10px] text-slate-400 font-bold uppercase">{new Date(post.fecha_publicacion).toLocaleDateString()}</span>
                     </div>
                   </div>
