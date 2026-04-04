@@ -21,14 +21,14 @@ export const Text = ({ children, variant = "default", className = "" }) => {
 // Header Principal de la página
 export const PageHeader = ({ title, subtitle, icon: Icon = ShieldCheck }) => (
   <div className="mb-10">
+    <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">
+      {title}
+    </h1>
     <div className="flex items-center gap-2 mb-1">
       <Icon size={16} className="text-blue-600" />
       <p className="text-slate-500 font-black uppercase tracking-[0.2em] text-[10px]">
         {subtitle}
       </p>
     </div>
-    <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-      {title}
-    </h1>
   </div>
 );
