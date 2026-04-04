@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { User, Mail, Shield, Calendar, BookOpen, CheckCircle, ArrowLeft } from 'lucide-react';
+import { User, Mail, Shield, Calendar, BookOpen, CheckCircle, ArrowLeft, Gem } from 'lucide-react';
 
 export default function PerfilPublicoPage() {
   const { id } = useParams();
@@ -9,6 +9,7 @@ export default function PerfilPublicoPage() {
   const [datos, setDatos] = useState(null);
   const [loading, setLoading] = useState(true);
   const miId = typeof window !== 'undefined' ? localStorage.getItem('usuario_id') : null;
+  const [gemas, setGemas] = useState([]);
 
   useEffect(() => {
     // Si es mi propio perfil, redirigir al perfil normal
@@ -20,6 +21,9 @@ export default function PerfilPublicoPage() {
       .then(res => res.json())
       .then(data => { setDatos(data); setLoading(false); })
       .catch(() => setLoading(false));
+    fetch(`/api/gemas?usuario_id=${id}`)
+    .then(res => res.json())
+    .then(data => setGemas(data));
   }, [id]);
 
   if (loading) return (
@@ -146,6 +150,55 @@ export default function PerfilPublicoPage() {
           <p className="text-slate-400 font-bold">Este usuario no tiene cursos asignados</p>
         </div>
       )}
+      {/* DIVISOR */}
+{gemas.length > 0 && (
+  <>
+    <div className="flex items-center gap-4 my-10">
+      <div className="flex-1 h-px bg-slate-200"></div>
+      <div className="flex items-center gap-2 text-slate-400">
+        <Gem size={16} />
+        <span className="text-xs font-black uppercase tracking-widest">Gemas</span>
+      </div>
+      <div className="flex-1 h-px bg-slate-200"></div>
+    </div>
+
+    <div>
+      <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3 mb-2">
+        <Gem size={26} className="text-blue-600" /> Gemas
+        <span className="bg-blue-100 text-blue-600 text-xs font-black px-2 py-0.5 rounded-full">{gemas.length}</span>
+      </h2>
+      <p className="text-slate-400 text-sm font-medium mb-8">Habilidades y logros desarrollados</p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {gemas.map((gema, index) => {
+          const colores = [
+            'from-blue-500 to-blue-600',
+            'from-purple-500 to-purple-600',
+            'from-emerald-500 to-emerald-600',
+            'from-orange-500 to-orange-600',
+            'from-pink-500 to-pink-600',
+            'from-cyan-500 to-cyan-600',
+          ];
+          const color = colores[index % colores.length];
+          return (
+            <div key={gema.gema_id} className="bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all">
+              <div className={`bg-gradient-to-br ${color} p-6`}>
+                <Gem size={32} className="text-white opacity-90" />
+              </div>
+              <div className="p-5">
+                <h3 className="font-black text-slate-900 text-sm mb-2">{gema.titulo}</h3>
+                <p className="text-slate-500 text-xs leading-relaxed">{gema.descripcion}</p>
+                <p className="text-slate-300 text-[10px] font-bold mt-4">
+                  {new Date(gema.fecha_creacion).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </>
+)}
     </div>
   );
 }
