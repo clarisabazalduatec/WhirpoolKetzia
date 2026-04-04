@@ -23,6 +23,7 @@ export default function AdminDashboard() {
   const [selectedAlumno, setSelectedAlumno] = useState('global');
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [rolId, setRolId] = useState(null);
   const [stats, setStats] = useState({
     totalCursos: 0, totalAlumnos: 0, tasaCompletado: 0, promedioQuiz: 0
   });
@@ -53,8 +54,10 @@ export default function AdminDashboard() {
     }
   };
 
-  useEffect(() => {
-    if (localStorage.getItem('rol_id') !== '1') return router.push('/');
+useEffect(() => {
+    const rol = localStorage.getItem('rol_id');
+    if (rol !== '1' && rol !== '30001') return router.push('/');
+    setRolId(Number(rol));
     cargarDatos('global', true);
   }, [router]);
 
@@ -131,7 +134,7 @@ export default function AdminDashboard() {
           <SectionCard 
             title="Biblioteca de Materiales" 
             count={materiales.length} 
-            action={<Button href="/admin/nuevo-material" variant="dark" icon={Plus}>Nuevo Material</Button>}
+            action={rolId === 1 ? <Button href="/admin/nuevo-material" variant="dark" icon={Plus}>Nuevo Material</Button> : null}
           >
             <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               {materiales.length > 0 ? materiales.map((m) => (
@@ -151,7 +154,7 @@ export default function AdminDashboard() {
           </SectionCard>
 
           {/* EXÁMENES */}
-          <SectionCard title="Exámenes Disponibles" count={examenes.length} action={<Button href="/admin/nuevo-examen" className="bg-purple-600 hover:bg-purple-700 shadow-purple-100" icon={Plus}>Crear Examen</Button>}>
+          <SectionCard title="Exámenes Disponibles" count={examenes.length} action={rolId === 1 ? <Button href="/admin/nuevo-examen" className="bg-purple-600 hover:bg-purple-700 shadow-purple-100" icon={Plus}>Crear Examen</Button> : null}>
             <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               {examenes.map((ex) => (
                 <ResourceItem key={ex.quiz_id} variant="purple" title={ex.titulo} subtitle={`${ex.total_preguntas || 0} Preguntas`} icon={HelpCircle}

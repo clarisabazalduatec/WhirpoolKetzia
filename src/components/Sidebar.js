@@ -61,7 +61,7 @@ export default function Sidebar({ colapsado }) {
         </Link>
 
         {/* Admin, Comunidad, Perfil se mantienen igual... */}
-        {rolId === 1 && (
+        {(rolId === 1 || rolId === 30001) && (
           <Link href="/admin" className="relative flex items-center justify-center w-full group">
             <div className={`flex items-center justify-center transition-all duration-300 rounded-2xl
               ${colapsado ? 'w-10 h-10 lg:w-12 lg:h-12' : 'w-12 h-12 lg:w-16 lg:h-16'} 
@@ -93,7 +93,7 @@ export default function Sidebar({ colapsado }) {
           {isActive('/perfil') && <span className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-blue-600 rounded-r-full" />}
         </Link>
       </nav>
-      
+
       {/* Notificaciones - justo antes del botón de LogOut */}
       <div className="hidden lg:flex items-center justify-center w-full mb-2">
         <Notificaciones />

@@ -30,7 +30,7 @@ export default function NuevoCurso() {
   });
 
   useEffect(() => {
-    if (localStorage.getItem('rol_id') !== '1') return router.push('/');
+    if (localStorage.getItem('rol_id') !== '1' && localStorage.getItem('rol_id') !== '30001') return router.push('/');
 
     fetch('/api/admin/archivos')
       .then(res => res.json())
