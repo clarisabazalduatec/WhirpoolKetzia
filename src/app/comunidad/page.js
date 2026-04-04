@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { MessageSquare, Loader2, Users, ChevronDown, ChevronUp, Plus, X, Send, Heart } from 'lucide-react';
-
+import Link from 'next/link';
 import { Button } from '@/components/Button';
 import { PageHeader, Title, Text } from '@/components/Typography';
 import { SectionCard } from '@/components/SectionCard';
