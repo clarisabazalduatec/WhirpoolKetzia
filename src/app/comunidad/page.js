@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { MessageSquare, Loader2, Users, ChevronDown, ChevronUp, Plus, X, Send, Heart } from 'lucide-react';
+// Añadimos Gem a las importaciones
+import { MessageSquare, Loader2, Users, ChevronDown, ChevronUp, Plus, X, Send, Heart, Gem } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
 import { PageHeader, Title, Text } from '@/components/Typography';
@@ -16,27 +17,21 @@ export default function ComunidadPage() {
   const limit = 5;
   const isFetching = useRef(false);
 
-  // NUEVO: Estado para el ID del usuario para evitar errores de localStorage en servidor
   const [currentUserId, setCurrentUserId] = useState(null);
-
   const [showMobileForm, setShowMobileForm] = useState(false);
   const [comentandoId, setComentandoId] = useState(null);
   const [nuevoComentario, setNuevoComentario] = useState('');
   const [comentariosVisibles, setComentariosVisibles] = useState({});
 
-  // 1. Efecto inicial para cargar el ID del usuario de forma segura
   useEffect(() => {
     const uid = localStorage.getItem('usuario_id');
     if (uid) setCurrentUserId(uid);
-    fetchPosts(true, uid); // Pasamos el uid directamente para la primera carga
+    fetchPosts(true, uid);
   }, []);
 
   const fetchPosts = useCallback(async (isInitial = false, uidOverride = null) => {
     if (isFetching.current || (!isInitial && !hasMore)) return;
-    
-    // Usamos el ID del estado o el override del useEffect inicial
     const uid = uidOverride || currentUserId;
-    
     isFetching.current = true;
     const currentOffset = isInitial ? 0 : offset;
 
@@ -46,9 +41,7 @@ export default function ComunidadPage() {
     try {
       const res = await fetch(`/api/comunidad?limit=${limit}&offset=${currentOffset}&myId=${uid || 0}`);
       const newData = await res.json();
-      
       if (newData.length < limit) setHasMore(false);
-      
       if (isInitial) {
         setPosts(newData);
         setOffset(limit);
@@ -69,10 +62,8 @@ export default function ComunidadPage() {
     }
   }, [offset, hasMore, currentUserId]);
 
-  // Manejador de Likes optimista
   const handleLike = async (id, tipo) => {
     if (!currentUserId) return;
-
     setPosts(prev => prev.map(post => {
       if (tipo === 'post' && post.publicacion_id === id) {
         return { ...post, iLiked: post.iLiked ? 0 : 1, totalLikes: post.iLiked ? post.totalLikes - 1 : post.totalLikes + 1 };
@@ -82,7 +73,6 @@ export default function ComunidadPage() {
       }
       return post;
     }));
-
     await fetch('/api/likes', { 
       method: 'POST', 
       headers: { 'Content-Type': 'application/json' },
@@ -93,16 +83,13 @@ export default function ComunidadPage() {
   const handleCommentSubmit = async (e, publicId) => {
     e.preventDefault();
     if (!nuevoComentario.trim() || !currentUserId) return;
-
     const uNombre = localStorage.getItem('nombre_usuario') || "Usuario";
     const uPfp = localStorage.getItem('usuario_pfp');
-
     const res = await fetch('/api/comentarios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ usuario_id: currentUserId, publicacion_id: publicId, contenido: nuevoComentario }),
     });
-
     if (res.ok) {
       const data = await res.json();
       setNuevoComentario('');
@@ -142,7 +129,7 @@ export default function ComunidadPage() {
               <PostForm 
                 fields={comunidadFields} 
                 apiUrl="/api/comunidad" 
-                extraData={{ usuario_id: currentUserId }} // USAMOS EL ESTADO
+                extraData={{ usuario_id: currentUserId }} 
                 onSuccess={() => { setShowMobileForm(false); fetchPosts(true); }} 
               />
             </SectionCard>
@@ -175,6 +162,34 @@ export default function ComunidadPage() {
                   <div className="p-4 pt-2">
                     <h4 className="text-xl font-black text-slate-900 mb-3">{post.titulo}</h4>
                     <p className="text-slate-600 leading-relaxed mb-6 font-medium">{post.contenido}</p>
+
+                    {/* --- INTEGRACIÓN DE LA GEMA ADJUNTA --- */}
+                    {post.gema && (
+                      <Link 
+                        href={`/perfil/${post.usuario_id}`}
+                        className="block mb-6 group transition-all hover:scale-[1.01]"
+                      >
+                        <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm group-hover:shadow-md transition-all">
+                          <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-50">
+                            <div className="p-2 bg-blue-50 rounded-lg">
+                              <Gem size={22} className="text-blue-600" />
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-blue-500">Gema Compartida</span>
+                            </div>
+                            <h5 className="text-sm font-black text-slate-900 group-hover:text-blue-700 transition-colors">
+                              {post.gema.titulo}
+                            </h5>
+                            <p className="text-xs text-slate-500 line-clamp-1 font-medium">
+                              {post.gema.descripcion}
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    )}
+
                     <div className="border-t border-slate-50 pt-6 space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -225,13 +240,12 @@ export default function ComunidadPage() {
           {loadingMore && <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-blue-600" /></div>}
         </div>
 
-        {/* FORMULARIO DESKTOP */}
         <aside className="hidden lg:block lg:w-1/3 lg:sticky lg:top-10 space-y-6">
           <SectionCard title="Nueva Publicación">
             <PostForm 
               fields={comunidadFields} 
               apiUrl="/api/comunidad" 
-              extraData={{ usuario_id: currentUserId }} // USAMOS EL ESTADO
+              extraData={{ usuario_id: currentUserId }} 
               onSuccess={() => fetchPosts(true)} 
             />
           </SectionCard>

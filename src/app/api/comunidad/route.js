@@ -11,9 +11,11 @@ export async function GET(request) {
     const [posts] = await pool.query(`
       SELECT p.*, u.nombre, u.pfp,
       (SELECT COUNT(*) FROM LikesPublicacion WHERE publicacion_id = p.publicacion_id) as totalLikes,
-      (SELECT COUNT(*) FROM LikesPublicacion WHERE publicacion_id = p.publicacion_id AND usuario_id = ?) as iLiked
+      (SELECT COUNT(*) FROM LikesPublicacion WHERE publicacion_id = p.publicacion_id AND usuario_id = ?) as iLiked,
+      g.gema_id as gem_id, g.titulo as gem_titulo, g.descripcion as gem_descripcion
       FROM Publicaciones p 
-      JOIN Usuarios u ON p.usuario_id = u.usuario_id 
+      JOIN Usuarios u ON p.usuario_id = u.usuario_id
+      LEFT JOIN Gemas g ON p.gema_id = g.gema_id
       ORDER BY p.fecha_publicacion DESC
       LIMIT ? OFFSET ?
     `, [myId, limit, offset]);
@@ -33,6 +35,11 @@ export async function GET(request) {
 
     const data = posts.map(post => ({
       ...post,
+      gema: post.gem_id ? {
+        gema_id: post.gem_id,
+        titulo: post.gem_titulo,
+        descripcion: post.gem_descripcion,
+      } : null,
       comentarios: comentarios.filter(c => c.publicacion_id === post.publicacion_id)
     }));
 
@@ -44,8 +51,11 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const { usuario_id, titulo, contenido } = await request.json();
-    await pool.query('INSERT INTO Publicaciones (usuario_id, titulo, contenido) VALUES (?, ?, ?)', [usuario_id, titulo, contenido]);
+    const { usuario_id, titulo, contenido, gema_id } = await request.json();
+    await pool.query(
+      'INSERT INTO Publicaciones (usuario_id, titulo, contenido, gema_id) VALUES (?, ?, ?, ?)',
+      [usuario_id, titulo, contenido, gema_id || null]
+    );
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

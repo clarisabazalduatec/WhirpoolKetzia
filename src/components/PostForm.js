@@ -1,18 +1,10 @@
 "use client";
-import { useState } from 'react';
-import { Send } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Send, Gem, X, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { Text } from '@/components/Typography';
 
-/**
- * Props:
- * - fields: Array de objetos { name, label, placeholder, type, required }
- * - apiUrl: String URL a la que se enviará el POST
- * - onSuccess: Callback al terminar con éxito
- * - buttonText: Texto del botón de envío
- * - extraData: Objeto con datos adicionales (ej. usuario_id) que no están en el form
- */
-export default function DynamicForm({ 
+export default function PostForm({ 
   fields = [], 
   apiUrl, 
   onSuccess, 
@@ -20,7 +12,6 @@ export default function DynamicForm({
   extraData = {},
   loadingExternal = false 
 }) {
-  // Generamos el estado inicial basado en los nombres de los campos
   const initialFormState = fields.reduce((acc, field) => {
     acc[field.name] = '';
     return acc;
@@ -28,6 +19,26 @@ export default function DynamicForm({
 
   const [formData, setFormData] = useState(initialFormState);
   const [enviando, setEnviando] = useState(false);
+  
+  // --- LÓGICA DE GEMAS ---
+  const [misGemas, setMisGemas] = useState([]);
+  const [gemaSeleccionada, setGemaSeleccionada] = useState(null);
+  const [cargandoGemas, setCargandoGemas] = useState(false);
+  const [showGemaPicker, setShowGemaPicker] = useState(false);
+
+  // Verificamos si estamos en comunidad para mostrar el selector
+  const esComunidad = apiUrl?.includes('comunidad');
+
+  useEffect(() => {
+    if (esComunidad && extraData?.usuario_id) {
+      setCargandoGemas(true);
+      fetch(`/api/gemas?usuario_id=${extraData.usuario_id}`)
+        .then(res => res.json())
+        .then(data => setMisGemas(Array.isArray(data) ? data : []))
+        .catch(err => console.error("Error cargando gemas:", err))
+        .finally(() => setCargandoGemas(false));
+    }
+  }, [extraData?.usuario_id, esComunidad]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,32 +47,29 @@ export default function DynamicForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validación básica de requeridos
     const missingFields = fields.filter(f => f.required && !formData[f.name]?.trim());
-    if (missingFields.length > 0) {
-      alert(`Por favor rellena: ${missingFields.map(f => f.label).join(', ')}`);
-      return;
-    }
+    if (missingFields.length > 0) return alert(`Por favor rellena los campos obligatorios`);
 
     setEnviando(true);
     try {
       const res = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, ...extraData }),
+        body: JSON.stringify({ 
+          ...formData, 
+          ...extraData, 
+          gema_id: gemaSeleccionada?.gema_id || null 
+        }),
       });
 
       if (res.ok) {
-        setFormData(initialFormState); // Limpiar form
+        setFormData(initialFormState);
+        setGemaSeleccionada(null); 
+        setShowGemaPicker(false);
         if (onSuccess) onSuccess();
-      } else {
-        const err = await res.json();
-        throw new Error(err.message || 'Error en el servidor');
       }
     } catch (error) {
-      console.error("Error al enviar formulario:", error);
-      alert(error.message);
+      console.error(error);
     } finally {
       setEnviando(false);
     }
@@ -73,10 +81,9 @@ export default function DynamicForm({
     <form onSubmit={handleSubmit} className="p-4 space-y-5">
       {fields.map((field) => (
         <div key={field.name}>
-          <Text variant="muted" className="ml-1 mb-2">
+          <Text variant="muted" className="ml-1 mb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
             {field.label} {field.required && <span className="text-red-500">*</span>}
           </Text>
-          
           {field.type === 'textarea' ? (
             <textarea
               name={field.name}
@@ -84,24 +91,77 @@ export default function DynamicForm({
               onChange={handleChange}
               placeholder={field.placeholder}
               disabled={isLoading}
-              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 min-h-[150px] resize-none text-sm font-medium disabled:opacity-50"
+              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px] resize-none text-sm font-medium transition-all"
             />
           ) : (
             <input
-              type={field.type || 'text'}
               name={field.name}
               value={formData[field.name]}
               onChange={handleChange}
               placeholder={field.placeholder}
               disabled={isLoading}
-              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm disabled:opacity-50"
+              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           )}
         </div>
       ))}
 
+      {/* SELECTOR DE GEMAS */}
+      {esComunidad && (
+        <div className="space-y-3">
+          {!gemaSeleccionada ? (
+            <button
+              type="button"
+              onClick={() => setShowGemaPicker(!showGemaPicker)}
+              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-tighter text-blue-600 hover:text-blue-700 transition-colors py-1"
+            >
+              <Gem size={14} /> {showGemaPicker ? "Cerrar selección" : "Adjuntar una gema"}
+            </button>
+          ) : (
+            <div className="flex items-center justify-between p-3 bg-blue-50/50 border border-blue-100 rounded-xl animate-in zoom-in-95 duration-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm border border-blue-50"><Gem size={16} /></div>
+                <div>
+                  <p className="text-[9px] font-black text-blue-400 uppercase leading-none mb-1">Gema adjunta</p>
+                  <p className="text-sm font-bold text-slate-800 line-clamp-1">{gemaSeleccionada.titulo}</p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setGemaSeleccionada(null)}
+                className="p-1.5 hover:bg-blue-100 rounded-full text-blue-400 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
+          {showGemaPicker && !gemaSeleccionada && (
+            <div className="grid grid-cols-1 gap-1 max-h-44 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-100 shadow-inner">
+              {cargandoGemas ? (
+                <div className="py-4 flex justify-center"><Loader2 className="animate-spin text-slate-300" size={20} /></div>
+              ) : misGemas.length > 0 ? (
+                misGemas.map(g => (
+                  <button
+                    key={g.gema_id}
+                    type="button"
+                    onClick={() => { setGemaSeleccionada(g); setShowGemaPicker(false); }}
+                    className="flex items-center justify-between p-3 hover:bg-white hover:shadow-sm rounded-lg text-left transition-all group"
+                  >
+                    <span className="text-xs font-bold text-slate-600 group-hover:text-blue-600 transition-colors">{g.titulo}</span>
+                    <CheckCircle2 size={14} className="text-slate-200 group-hover:text-blue-400 transition-colors" />
+                  </button>
+                ))
+              ) : (
+                <p className="text-[10px] text-center text-slate-400 py-4 font-bold uppercase italic tracking-widest">No tienes gemas disponibles</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <Button 
-        className="w-full py-4" 
+        className="w-full py-4 shadow-lg shadow-blue-200/40" 
         icon={Send} 
         loading={isLoading}
       >
