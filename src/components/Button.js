@@ -18,7 +18,7 @@ export const Button = ({
     dark: "bg-slate-900 text-white hover:bg-slate-800 shadow-slate-100 shadow-xl",
     danger: "bg-white text-red-500 border border-red-100 hover:bg-red-50 shadow-red-50 shadow-xl",
     ghost: "bg-transparent text-slate-700 hover:bg-slate-100 border border-slate-100",
-    pill: "bg-slate-50 text-slate-500 hover:text-blue-600 hover:bg-blue-50 px-4 py-2 text-[10px] uppercase tracking-widest shadow-none border-none"
+    pill: "bg-slate-50 text-slate-500 hover:text-blue-600 hover:bg-slate-100 px-4 py-2 text-[10px] uppercase tracking-widest shadow-none border-none"
   };
 
   const content = (

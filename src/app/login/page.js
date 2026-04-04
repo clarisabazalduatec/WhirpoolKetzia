@@ -22,6 +22,7 @@ export default function LoginPage() {
     localStorage.setItem('usuario_id', session.user.usuario_id?.toString() || '');
     localStorage.setItem('rol_id', session.user.rol_id?.toString() || '');
     localStorage.setItem('nombre_usuario', session.user.name || '');
+    localStorage.setItem('usuario_pfp', session.user.pfp || '');
     router.push('/');
   }
 }, [status]);
@@ -45,6 +46,9 @@ export default function LoginPage() {
         localStorage.setItem('usuario_id', data.user.id.toString());
         localStorage.setItem('rol_id', data.user.rol.toString());
         localStorage.setItem('nombre_usuario', data.user.nombre);
+        // AGREGAR ESTA LÍNEA:
+        localStorage.setItem('usuario_pfp', data.user.pfp || ''); 
+        
         router.push('/');
         router.refresh(); 
       } else {

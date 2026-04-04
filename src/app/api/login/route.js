@@ -28,7 +28,8 @@ export async function POST(req) {
       user: {
         id: user.usuario_id,
         nombre: user.nombre,
-        rol: user.rol_id
+        rol: user.rol_id,
+        pfp: user.pfp,
       }
     });
 
