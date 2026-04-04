@@ -1,6 +1,7 @@
 "use client";
 
 // Agrega este import arriba junto a los otros imports
+import Notificaciones from '@/components/Notificaciones';
 import { signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -92,6 +93,11 @@ export default function Sidebar({ colapsado }) {
           {isActive('/perfil') && <span className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-blue-600 rounded-r-full" />}
         </Link>
       </nav>
+      
+      {/* Notificaciones - justo antes del botón de LogOut */}
+      <div className="hidden lg:flex items-center justify-center w-full mb-2">
+        <Notificaciones />
+      </div>
 
       <button 
         onClick={handleLogout} 

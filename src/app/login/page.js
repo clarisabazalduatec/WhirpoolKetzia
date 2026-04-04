@@ -64,7 +64,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');
-    await signIn('google', { callbackUrl: '/login' });
+    await signIn('google', { callbackUrl: '/login' , prompt: 'select_account' }); // ELIMINAR PROMPT SI SE DESEA QUE GOOGLE RECUERDE LA SESSION Y ENTRE AUTOMATICAMENTE
   };
 
   return (
