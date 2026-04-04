@@ -68,11 +68,14 @@ export default function LoginPage() {
       <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl p-10 border border-slate-100">
         
         <div className="text-center mb-10">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg shadow-blue-200">
-            <LogIn size={32} />
+          <div className="w-64 flex items-center justify-center mx-auto">
+            <img 
+              src="/whirlpoolwidelogo.png" 
+              alt="Whirlpool" 
+              className={`w-full object-contain transition-all duration-300 h-32`} 
+            />
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight italic">Whirlpool</h1>
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mt-1">Learning Portal</p>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mt-1">AI Learning Portal</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
@@ -132,28 +135,26 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="flex items-center gap-4 mb-6">
-          <div className="flex-1 h-px bg-slate-100"></div>
-          <span className="text-slate-300 text-xs font-bold uppercase tracking-widest">o</span>
-          <div className="flex-1 h-px bg-slate-100"></div>
-        </div>
         
-        <button
-          onClick={handleGoogleLogin}
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 text-slate-700 font-bold py-4 rounded-2xl hover:border-blue-400 hover:bg-blue-50 transition-all mb-6 disabled:opacity-50"
-        >
-          <svg width="20" height="20" viewBox="0 0 48 48">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-          </svg>
-          Continuar con Google
-        </button>
+
+        <div className="py-5">
+          <button
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 text-slate-700 font-bold py-4 rounded-2xl hover:border-blue-400 hover:bg-blue-50 transition-all mb-6 disabled:opacity-50"
+          >
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            Continuar con Google
+          </button>
+        </div>
 
 
-        <div className="mt-10 pt-8 border-t border-slate-50 text-center">
+        <div className="border-slate-50 text-center">
           <p className="text-slate-400 text-xs font-medium">¿Aún no tienes una cuenta?</p>
           <Link 
             href="/registro" 
