@@ -26,10 +26,11 @@ export async function POST(request) {
       );
     }
 
+    // Usamos NOW() para la fecha_subida para asegurar el registro correcto
     const [result] = await pool.query(
-      `INSERT INTO Archivos (nombre_archivo, tipo_archivo, descripcion, url_archivo) 
-       VALUES (?, ?, ?, ?)`,
-      [nombre_archivo, tipo_archivo, descripcion, url_archivo]
+      `INSERT INTO Archivos (nombre_archivo, tipo_archivo, descripcion, url_archivo, fecha_subida) 
+       VALUES (?, ?, ?, ?, NOW())`,
+      [nombre_archivo, tipo_archivo, descripcion || '', url_archivo]
     );
 
     return NextResponse.json({ 
@@ -40,7 +41,7 @@ export async function POST(request) {
   } catch (error) {
     console.error("Error MySQL:", error);
     return NextResponse.json(
-      { error: "Fallo al registrar en la base de datos" }, 
+      { error: "No se pudo registrar en la base de datos. Verifica la conexión." }, 
       { status: 500 }
     );
   }
