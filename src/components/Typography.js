@@ -13,22 +13,29 @@ export const Text = ({ children, variant = "default", className = "" }) => {
   const variants = {
     default: "text-sm font-bold text-slate-600",
     muted: "text-[10px] text-slate-400 font-medium uppercase tracking-tight",
-    description: "text-sm font-bold text-slate-600 line-clamp-1"
+    description: "text-sm font-bold text-slate-600"
   };
+  
   return <p className={`${variants[variant]} ${className}`}>{children}</p>;
 };
 
 // Header Principal de la página
-export const PageHeader = ({ title, subtitle, icon: Icon = ShieldCheck }) => (
-  <div className="mb-10">
+export const PageHeader = ({ title, subtitle, icon: Icon = null }) => (
+  <div className="mb-4">
     <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">
       {title}
     </h1>
+    
+    {/* Contenedor flex para alinear icono y descripción en la misma fila */}
     <div className="flex items-center gap-2 mb-1">
-      <Icon size={16} className="text-blue-600" />
-      <p className="text-slate-500 font-black uppercase tracking-[0.2em] text-[10px]">
-        {subtitle}
-      </p>
+      {/* El icono solo aparece si existe, pero no rompe el flujo si no está */}
+      {Icon && <Icon size={16} className="text-blue-600 shrink-0" />}
+      
+      {subtitle && (
+        <p className="text-slate-500 font-black uppercase tracking-[0.2em] text-[10px]">
+          {subtitle}
+        </p>
+      )}
     </div>
   </div>
 );

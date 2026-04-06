@@ -11,9 +11,16 @@ export async function GET(request) {
   }
 
   try {
-    // 1. Datos básicos del curso
+    // 1. Datos básicos del curso + ESTADÍSTICAS GLOBALES REALES
     const [cursoRows] = await pool.query(`
-      SELECT c.*, u.nombre as nombre_autor 
+      SELECT 
+        c.*, 
+        u.nombre as nombre_autor,
+        -- Aseguramos que devuelva 0 si no hay registros
+        IFNULL((SELECT COUNT(DISTINCT usuario_id) FROM Inscripciones WHERE curso_id = c.curso_id), 0) as total_inscritos,
+        IFNULL((SELECT COUNT(DISTINCT usuario_id) FROM Completaciones WHERE inscripcion_id IN 
+          (SELECT inscripcion_id FROM Inscripciones WHERE curso_id = c.curso_id)
+        ), 0) as total_graduados
       FROM Cursos c
       LEFT JOIN Usuarios u ON c.creado_por = u.usuario_id
       WHERE c.curso_id = ?
@@ -21,42 +28,19 @@ export async function GET(request) {
 
     if (cursoRows.length === 0) return NextResponse.json({ error: 'No existe' }, { status: 404 });
 
-    // 2. Consulta UNIFICADA (Archivos + Quizzes)
+    // 2. Consulta UNIFICADA (Archivos + Quizzes) - Se mantiene igual
     const [items] = await pool.query(`
-      -- PARTE 1: Archivos
-      SELECT 
-        a.archivo_id AS id_contenido,
-        a.nombre_archivo AS titulo,
-        'archivo' AS tipo,
-        ac.orden,
-        (SELECT COUNT(*) FROM Archivos_Vistos av 
-        WHERE av.archivo_id = a.archivo_id 
-        AND av.usuario_id = ? 
-        AND av.curso_id = ?) AS completado -- <--- FILTRO POR CURSO AÑADIDO
-      FROM Archivos_Curso ac
-      JOIN Archivos a ON ac.archivo_id = a.archivo_id
-      WHERE ac.curso_id = ?
-
+      SELECT a.archivo_id AS id_contenido, a.nombre_archivo AS titulo, 'archivo' AS tipo, ac.orden,
+      (SELECT COUNT(*) FROM Archivos_Vistos av WHERE av.archivo_id = a.archivo_id AND av.usuario_id = ? AND av.curso_id = ?) AS completado
+      FROM Archivos_Curso ac JOIN Archivos a ON ac.archivo_id = a.archivo_id WHERE ac.curso_id = ?
       UNION ALL
-
-      -- PARTE 2: Quizzes (Este se mantiene igual ya que Quizzes_Completados ya tiene curso_id)
-      SELECT 
-        q.quiz_id AS id_contenido,
-        q.titulo AS titulo,
-        'quiz' AS tipo,
-        qc.orden,
-        (SELECT COUNT(*) FROM Quizzes_Completados qc_comp 
-        WHERE qc_comp.quiz_id = q.quiz_id 
-        AND qc_comp.usuario_id = ? 
-        AND qc_comp.curso_id = ?) AS completado
-      FROM Quiz_Curso qc
-      JOIN Quizzes q ON qc.quiz_id = q.quiz_id
-      WHERE qc.curso_id = ?
-
+      SELECT q.quiz_id AS id_contenido, q.titulo AS titulo, 'quiz' AS tipo, qc.orden,
+      (SELECT COUNT(*) FROM Quizzes_Completados qc_comp WHERE qc_comp.quiz_id = q.quiz_id AND qc_comp.usuario_id = ? AND qc_comp.curso_id = ?) AS completado
+      FROM Quiz_Curso qc JOIN Quizzes q ON qc.quiz_id = q.quiz_id WHERE qc.curso_id = ?
       ORDER BY orden ASC
     `, [usuario_id, curso_id, curso_id, usuario_id, curso_id, curso_id]); 
 
-    // 3. Cálculo de Progreso
+    // 3. Cálculo de Progreso del usuario actual
     const totalItems = items.length;
     const completadosCount = items.filter(i => i.completado > 0).length;
     const porcentaje = totalItems > 0 ? Math.round((completadosCount / totalItems) * 100) : 0;
