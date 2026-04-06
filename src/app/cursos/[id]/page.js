@@ -165,8 +165,8 @@ export default function CursoDetalle(props) {
                   <ResourceItem
                     key={uniqueKey}
                     title={item.titulo}
-                    subtitle={isQuiz ? "Evaluación de Conocimientos" : `Lección ${index + 1}`}
-                    icon={isQuiz ? Award : Play}
+                    subtitle={isQuiz ? "Quiz" : `Lección ${index + 1}`}
+                    icon={isQuiz ? Award : FileText}
                     variant={isQuiz ? 'yellow' : 'blue'}
                     action={
                       isQuiz ? (

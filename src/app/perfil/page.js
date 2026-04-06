@@ -4,6 +4,10 @@ import { useRouter } from 'next/navigation';
 import { User, Mail, Calendar, BookOpen, CheckCircle, LogOut, Edit3, Save, X, Camera, Loader2, Gem, Plus, Trash2, Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
+// Importación de componentes refactorizados
+import { Button } from '@/components/Button';
+import { Title, Text, PageHeader } from '@/components/Typography';
+
 export default function PerfilPage() {
   const [datos, setDatos] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -140,11 +144,11 @@ export default function PerfilPage() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <Loader2 className="animate-spin text-blue-600" size={40} />
     </div>
   );
 
-  if (!datos || !datos.usuario) return <div className="p-20 text-center">Usuario no encontrado</div>;
+  if (!datos || !datos.usuario) return <div className="p-20 text-center font-black">Usuario no encontrado</div>;
 
   const { usuario, stats } = datos;
 
@@ -211,23 +215,17 @@ export default function PerfilPage() {
           </div>
         </div>
 
-        <div className="flex gap-2">
+        {/* CONTROLES DE EDICIÓN A LA DERECHA */}
+        <div className="shrink-0 flex flex-col gap-2">
           {editMode ? (
             <>
-              <button onClick={handleSave} disabled={saving}
-                className="bg-emerald-500 text-white p-4 rounded-2xl shadow-lg hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50">
-                {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-              </button>
-              <button onClick={() => { setEditMode(false); setPreviewPfp(null); setNuevoNombre(usuario.alias || ''); }}
-                className="bg-slate-100 text-slate-500 p-4 rounded-2xl hover:bg-slate-200 transition-all">
-                <X size={20} />
-              </button>
+              <Button onClick={handleSave} loading={saving} variant="primary" icon={Save} className="px-8 py-3 rounded-xl" />
+              <Button onClick={() => { setEditMode(false); setPreviewPfp(null); setNuevoNombre(usuario.alias || ''); }} variant="ghost" icon={X} className="px-8 py-3 rounded-xl" />
             </>
           ) : (
-            <button onClick={() => setEditMode(true)}
-              className="bg-white text-blue-600 border border-blue-100 p-4 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center gap-2 font-black text-xs uppercase tracking-widest">
-              <Edit3 size={18} /> Editar Perfil
-            </button>
+            <Button onClick={() => setEditMode(true)} variant="ghost" icon={Edit3} className="text-[10px] uppercase font-black tracking-widest px-8 py-3 border-slate-100 text-slate-600 hover:bg-slate-50">
+              Editar Perfil
+            </Button>
           )}
         </div>
       </div>
@@ -239,7 +237,7 @@ export default function PerfilPage() {
             <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex items-center gap-5">
               <div className="bg-orange-100 text-orange-600 p-4 rounded-2xl"><BookOpen size={28} /></div>
               <div>
-                <p className="text-3xl font-black text-slate-900 leading-none">{stats.total_inscritos}</p>
+                <p className="text-3xl font-black text-slate-900 leading-none">{stats.total_inscritos-stats.total_completados}</p>
                 <p className="text-slate-400 text-xs font-black uppercase mt-1">Cursos Asignados</p>
               </div>
             </div>
@@ -269,12 +267,6 @@ export default function PerfilPage() {
               </div>
             </div>
           </div>
-          <div className="lg:hidden">
-            <button onClick={handleLogout}
-              className="w-full bg-red-50 text-red-600 font-black py-5 rounded-2xl flex items-center justify-center gap-3 border border-red-100 active:scale-95 transition-all shadow-sm shadow-red-100">
-              <LogOut size={20} /> Cerrar Sesión
-            </button>
-          </div>
         </aside>
       </div>
 
@@ -289,7 +281,7 @@ export default function PerfilPage() {
       </div>
 
       {/* SECCIÓN GEMAS */}
-      <div>
+      <div className="mb-20">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
@@ -299,10 +291,9 @@ export default function PerfilPage() {
             <p className="text-slate-400 text-sm font-medium mt-1">Habilidades y logros que has desarrollado</p>
           </div>
           {gemas.length < 10 && !showGemaForm && (
-            <button onClick={() => setShowGemaForm(true)}
-              className="flex items-center gap-2 bg-blue-600 text-white text-xs font-black px-5 py-3 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
-              <Plus size={16} /> Nueva Gema
-            </button>
+            <Button onClick={() => setShowGemaForm(true)} variant="primary" icon={Plus} className="text-xs px-5 py-3 rounded-xl font-black uppercase tracking-widest">
+              Nueva Gema
+            </Button>
           )}
         </div>
 
@@ -324,80 +315,80 @@ export default function PerfilPage() {
               onChange={(e) => setNuevaGema({ ...nuevaGema, descripcion: e.target.value })}
             />
             <div className="flex gap-2 justify-end">
-              <button onClick={() => { setShowGemaForm(false); setNuevaGema({ titulo: '', descripcion: '' }); }}
-                className="px-4 py-2 text-slate-500 bg-slate-100 rounded-xl text-xs font-black hover:bg-slate-200 transition-all">
+              <Button onClick={() => { setShowGemaForm(false); setNuevaGema({ titulo: '', descripcion: '' }); }} variant="ghost" className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest">
                 Cancelar
-              </button>
-              <button onClick={handleCrearGema} disabled={savingGema}
-                className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all disabled:opacity-50">
-                {savingGema ? 'Guardando...' : 'Guardar Gema'}
-              </button>
+              </Button>
+              <Button onClick={handleCrearGema} loading={savingGema} variant="primary" className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest">
+                Guardar Gema
+              </Button>
             </div>
           </div>
         )}
 
-        {gemas.length === 0 && !showGemaForm ? (
-          <div className="bg-white rounded-[2.5rem] p-16 text-center border border-slate-200">
-            <Gem size={40} className="mx-auto text-slate-200 mb-4" />
-            <p className="text-slate-400 font-bold">Aún no tienes gemas</p>
-            <p className="text-slate-300 text-xs mt-1">¡Agrega tu primera gema!</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {gemas.map((gema, index) => {
-              const color = colores[index % colores.length];
-              return editandoGema?.gema_id === gema.gema_id ? (
-                <div key={gema.gema_id} className="bg-white rounded-[2rem] p-5 border-2 border-blue-300 shadow-sm">
-                  <input
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 mb-2"
-                    value={editandoGema.titulo}
-                    onChange={(e) => setEditandoGema({ ...editandoGema, titulo: e.target.value })}
-                    maxLength={100}
-                  />
-                  <textarea
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 mb-3 resize-none"
-                    rows={3}
-                    value={editandoGema.descripcion}
-                    onChange={(e) => setEditandoGema({ ...editandoGema, descripcion: e.target.value })}
-                  />
-                  <div className="flex gap-2 justify-end">
-                    <button onClick={() => setEditandoGema(null)}
-                      className="px-3 py-1.5 text-slate-500 bg-slate-100 rounded-xl text-xs font-black hover:bg-slate-200">
-                      Cancelar
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {gemas.map((gema, index) => {
+            const color = colores[index % colores.length];
+            return editandoGema?.gema_id === gema.gema_id ? (
+              <div key={gema.gema_id} className="bg-white rounded-[2rem] p-5 border-2 border-blue-300 shadow-sm">
+                <input
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                  value={editandoGema.titulo}
+                  onChange={(e) => setEditandoGema({ ...editandoGema, titulo: e.target.value })}
+                  maxLength={100}
+                />
+                <textarea
+                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 mb-3 resize-none"
+                  rows={3}
+                  value={editandoGema.descripcion}
+                  onChange={(e) => setEditandoGema({ ...editandoGema, descripcion: e.target.value })}
+                />
+                <div className="flex gap-2 justify-end">
+                  <Button onClick={() => setEditandoGema(null)} variant="ghost" className="px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest">
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleEditarGema} loading={savingGema} variant="primary" className="px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest">
+                    Guardar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div key={gema.gema_id} className="bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all group">
+                <div className={`bg-gradient-to-br ${color} p-6 flex items-center justify-between`}>
+                  <Gem size={32} className="text-white opacity-90" />
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => setEditandoGema({ ...gema })}
+                      className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-white transition-all">
+                      <Pencil size={14} />
                     </button>
-                    <button onClick={handleEditarGema} disabled={savingGema}
-                      className="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 disabled:opacity-50">
-                      {savingGema ? 'Guardando...' : 'Guardar'}
+                    <button onClick={() => handleEliminarGema(gema.gema_id)}
+                      className="p-1.5 bg-white/20 hover:bg-red-500 rounded-lg text-white transition-all">
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
-              ) : (
-                <div key={gema.gema_id} className="bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all group">
-                  <div className={`bg-gradient-to-br ${color} p-6 flex items-center justify-between`}>
-                    <Gem size={32} className="text-white opacity-90" />
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => setEditandoGema({ ...gema })}
-                        className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-white transition-all">
-                        <Pencil size={14} />
-                      </button>
-                      <button onClick={() => handleEliminarGema(gema.gema_id)}
-                        className="p-1.5 bg-white/20 hover:bg-red-500 rounded-lg text-white transition-all">
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-black text-slate-900 text-sm mb-2">{gema.titulo}</h3>
-                    <p className="text-slate-500 text-xs leading-relaxed">{gema.descripcion}</p>
-                    <p className="text-slate-300 text-[10px] font-bold mt-4">
-                      {new Date(gema.fecha_creacion).toLocaleDateString()}
-                    </p>
-                  </div>
+                <div className="p-5">
+                  <h3 className="font-black text-slate-900 text-sm mb-2">{gema.titulo}</h3>
+                  <p className="text-slate-500 text-xs leading-relaxed">{gema.descripcion}</p>
+                  <Text variant="muted" className="mt-4">
+                    {new Date(gema.fecha_creacion).toLocaleDateString()}
+                  </Text>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* BOTÓN LOGOUT AL FINAL ESQUINA DERECHA */}
+      <div className="flex justify-end mt-10">
+        <Button 
+          onClick={handleLogout} 
+          variant="danger" 
+          icon={LogOut} 
+          className="px-10 py-4 rounded-2xl text-xs uppercase tracking-widest font-black shadow-red-100"
+        >
+          Cerrar Sesión
+        </Button>
       </div>
     </div>
   );

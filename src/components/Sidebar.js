@@ -98,13 +98,6 @@ export default function Sidebar({ colapsado }) {
       <div className="hidden lg:flex items-center justify-center w-full mb-2">
         <Notificaciones />
       </div>
-
-      <button 
-        onClick={handleLogout} 
-        className="hidden lg:flex text-slate-300 hover:text-red-500 transition-colors p-2 lg:p-3 lg:mt-auto"
-      >
-        <LogOut size={20} className="lg:w-6 lg:h-6" />
-      </button>
     </aside>
   );
 }
