@@ -16,7 +16,7 @@ export default function Notificaciones() {
     if (uid) {
       setUsuarioId(uid);
       fetchNotificaciones(uid);
-      const interval = setInterval(() => fetchNotificaciones(uid), 30000);
+      const interval = setInterval(() => fetchNotificaciones(uid), 1200000);
       
       const handleClickOutside = (e) => {
         if (ref.current && !ref.current.contains(e.target)) {

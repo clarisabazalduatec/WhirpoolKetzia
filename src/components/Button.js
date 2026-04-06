@@ -11,7 +11,7 @@ export const Button = ({
   icon: Icon,
   className = "" 
 }) => {
-  const baseStyles = "px-6 py-3 rounded-[2.5rem] font-black flex items-center justify-center gap-2 transition-all active:scale-95 text-sm";
+  const baseStyles = "px-6 py-3 rounded-[0.5rem] font-black flex items-center justify-center gap-2 transition-all active:scale-95 text-sm";
   
   const variants = {
     primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100 shadow-xl",

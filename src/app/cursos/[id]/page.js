@@ -101,31 +101,52 @@ export default function CursoDetalle(props) {
             </div>
           </SectionCard>
 
-          {/* Tarjeta de Métricas */}
-          <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-xl">
-            <Users className="absolute -right-4 -bottom-4 opacity-10" size={120} />
-            <h3 className="text-xl font-black mb-6 relative z-10">Impacto Global</h3>
+          {/* Tarjeta de Métricas de Impacto Global */}
+        <SectionCard 
+          variant="dark"
+          className="shadow-2xl shadow-slate-900/20"
+        >
+          <div className="p-4 space-y-4 relative overflow-hidden">
+            {/* Icono decorativo de fondo */}
+            <Users 
+              className="absolute -right-4 -bottom-4 opacity-10 text-white" 
+              size={120} 
+            />
+
             <div className="space-y-4 relative z-10">
-              <div className="bg-white/10 p-4 rounded-2xl flex items-center gap-4 border border-white/5">
-                <Users size={20} className="text-blue-400" />
+              {/* Métrica: Inscritos */}
+              <div className="bg-white/10 p-4 rounded-2xl flex items-center gap-4 border border-white/5 transition-all hover:bg-white/15">
+                <div className="p-2 bg-blue-500/20 rounded-lg shrink-0">
+                  <Users size={20} className="text-blue-400" />
+                </div>
                 <div>
-                  <p className="text-xl font-black leading-none">
-                    {(curso.total_inscritos || 0).toLocaleString()}
+                  <p className="text-xl font-black leading-none text-white">
+                    {(curso?.total_inscritos || 0).toLocaleString()}
                   </p>
-                  <Text variant="muted" className="text-slate-400">Compañeros Inscritos</Text>
+                  <Text variant="muted" className="text-slate-400 mt-1">
+                    Compañeros Inscritos
+                  </Text>
                 </div>
               </div>
-              <div className="bg-white/10 p-4 rounded-2xl flex items-center gap-4 border border-white/5">
-                <CheckCircle2 size={20} className="text-emerald-400" />
+
+              {/* Métrica: Graduados */}
+              <div className="bg-white/10 p-4 rounded-2xl flex items-center gap-4 border border-white/5 transition-all hover:bg-white/15">
+                <div className="p-2 bg-emerald-500/20 rounded-lg shrink-0">
+                  <CheckCircle2 size={20} className="text-emerald-400" />
+                </div>
                 <div>
-                  <p className="text-xl font-black leading-none">
-                    {(curso.total_graduados || 0).toLocaleString()}
+                  <p className="text-xl font-black leading-none text-white">
+                    {(curso?.total_graduados || 0).toLocaleString()}
                   </p>
-                  <Text variant="muted" className="text-slate-400">Ya han terminado</Text>
+                  <Text variant="muted" className="text-slate-400 mt-1">
+                    Ya han terminado
+                  </Text>
                 </div>
               </div>
             </div>
           </div>
+        </SectionCard>
+
         </aside>
 
         {/* COLUMNA DERECHA (2/3 -> 8 COL) */}
@@ -146,7 +167,7 @@ export default function CursoDetalle(props) {
                     title={item.titulo}
                     subtitle={isQuiz ? "Evaluación de Conocimientos" : `Lección ${index + 1}`}
                     icon={isQuiz ? Award : Play}
-                    variant={isQuiz ? 'purple' : 'blue'}
+                    variant={isQuiz ? 'yellow' : 'blue'}
                     action={
                       isQuiz ? (
                         item.completado ? (
@@ -156,7 +177,7 @@ export default function CursoDetalle(props) {
                         ) : (
                           <Button 
                             href={`/cursos/${id}/quiz/${item.id_contenido}`} 
-                            variant="primary" 
+                            variant="dark" 
                             className="h-10 px-4 text-xs shadow-none"
                           >
                             Empezar Test
