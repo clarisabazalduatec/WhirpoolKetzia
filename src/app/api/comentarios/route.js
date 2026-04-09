@@ -47,3 +47,41 @@ export async function POST(request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE(request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  const uid = searchParams.get('uid');
+  try {
+    await pool.query('DELETE FROM LikesComentario WHERE comentario_id = ?', [id]);
+    const [res] = await pool.query('DELETE FROM Comentarios WHERE comentario_id = ? AND usuario_id = ?', [id, uid]);
+    return NextResponse.json({ success: res.affectedRows > 0 });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// NUEVA FUNCIÓN PARA EDITAR COMENTARIOS
+export async function PUT(request) {
+  try {
+    const { comentario_id, usuario_id, contenido } = await request.json();
+
+    if (!comentario_id || !usuario_id || !contenido) {
+      return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
+    }
+
+    // Actualizamos solo si el usuario_id coincide con el dueño del comentario
+    const [res] = await pool.query(
+      'UPDATE Comentarios SET contenido = ? WHERE comentario_id = ? AND usuario_id = ?',
+      [contenido, comentario_id, usuario_id]
+    );
+
+    if (res.affectedRows === 0) {
+      return NextResponse.json({ error: "No autorizado o no encontrado" }, { status: 403 });
+    }
+
+    return NextResponse.json({ success: true, message: "Comentario actualizado" });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

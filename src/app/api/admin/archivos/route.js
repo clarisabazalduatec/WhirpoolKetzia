@@ -46,3 +46,22 @@ export async function POST(request) {
     );
   }
 }
+
+export async function DELETE(request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+  if (!id) return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
+
+  try {
+    // 1. Quitarlo de los cursos donde esté asignado
+    await pool.query('DELETE FROM Archivos_Curso WHERE archivo_id = ?', [id]);
+    
+    // 2. Borrar el registro del archivo
+    const [result] = await pool.query('DELETE FROM Archivos WHERE archivo_id = ?', [id]);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

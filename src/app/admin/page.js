@@ -54,17 +54,31 @@ export default function AdminDashboard() {
     }
   };
 
-useEffect(() => {
+  useEffect(() => {
     const rol = localStorage.getItem('rol_id');
     if (rol !== '1' && rol !== '30001') return router.push('/');
     setRolId(Number(rol));
     cargarDatos('global', true);
   }, [router]);
 
+  // --- FUNCIONES DE ELIMINACIÓN ---
+  
   const eliminarCurso = async (id, titulo) => {
-    if (!window.confirm(`¿Eliminar "${titulo}"?`)) return;
+    if (!window.confirm(`¿Eliminar curso "${titulo}"? Esta acción borrará inscripciones relacionadas.`)) return;
     const res = await fetch(`/api/admin/cursos/${id}`, { method: 'DELETE' });
     if (res.ok) setCursos(cursos.filter(c => c.curso_id !== id));
+  };
+
+  const eliminarMaterial = async (id, titulo) => {
+    if (!window.confirm(`¿Eliminar material "${titulo}"? Se quitará de todos los cursos.`)) return;
+    const res = await fetch(`/api/admin/archivos?id=${id}`, { method: 'DELETE' });
+    if (res.ok) setMateriales(materiales.filter(m => m.archivo_id !== id));
+  };
+
+  const eliminarExamen = async (id, titulo) => {
+    if (!window.confirm(`¿Eliminar examen "${titulo}"? Se perderán las calificaciones de este quiz.`)) return;
+    const res = await fetch(`/api/admin/quizzes?id=${id}`, { method: 'DELETE' });
+    if (res.ok) setExamenes(examenes.filter(ex => ex.quiz_id !== id));
   };
 
   if (loading) return (
@@ -75,16 +89,11 @@ useEffect(() => {
 
   return (
     <div className="max-w-[1600px] mx-auto p-6 lg:p-10 font-sans">
-      
-      <PageHeader 
-        title="Panel de Control" 
-        subtitle="Gestión de Capacitación Whirlpool" 
-        icon={ShieldCheck} 
-      />
+      <PageHeader title="Panel de Control" subtitle="Gestión de Capacitación Whirlpool" icon={ShieldCheck} />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-        
         <div className="xl:col-span-8 space-y-10">
+          
           {/* CURSOS */}
           <SectionCard 
             title="Catálogo Global" 
@@ -119,7 +128,9 @@ useEffect(() => {
                       <td className="px-6 py-5"><Text>{curso.nombre_creador || 'Sistema'}</Text></td>
                       <td className="px-6 py-5 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="danger" className="px-3 py-2.5 rounded-xl shadow-none" onClick={() => eliminarCurso(curso.curso_id, curso.titulo)} icon={Trash2} />
+                          {rolId === 1 && (
+                            <Button variant="danger" className="px-3 py-2.5 rounded-xl shadow-none" onClick={() => eliminarCurso(curso.curso_id, curso.titulo)} icon={Trash2} />
+                          )}
                           <Button href={`/admin/gestionar/${curso.curso_id}`} variant="ghost">Gestionar</Button>
                         </div>
                       </td>
@@ -144,9 +155,16 @@ useEffect(() => {
                   subtitle={m.tipo_archivo || 'Documento'}
                   icon={FileText}
                   action={
-                    <a href={m.url_archivo} target="_blank" className="p-2 text-slate-300 hover:text-blue-600 transition-colors">
-                      <ExternalLink size={18} />
-                    </a>
+                    <div className="flex items-center gap-1">
+                      {rolId === 1 && (
+                        <button onClick={() => eliminarMaterial(m.archivo_id, m.nombre_archivo)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                          <Trash2 size={18} />
+                        </button>
+                      )}
+                      <a href={m.url_archivo} target="_blank" className="p-2 text-slate-300 hover:text-blue-600 transition-colors">
+                        <ExternalLink size={18} />
+                      </a>
+                    </div>
                   }
                 />
               )) : <div className="col-span-full py-10 text-center"><Text variant="muted">No hay materiales</Text></div>}
@@ -157,8 +175,24 @@ useEffect(() => {
           <SectionCard title="Exámenes Disponibles" count={examenes.length} action={rolId === 1 ? <Button href="/admin/nuevo-examen" className="bg-purple-600 hover:bg-purple-700 shadow-purple-100" icon={Plus}>Crear Examen</Button> : null}>
             <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               {examenes.map((ex) => (
-                <ResourceItem key={ex.quiz_id} variant="purple" title={ex.titulo} subtitle={`${ex.total_preguntas || 0} Preguntas`} icon={HelpCircle}
-                  action={<Link href={`/admin/editar-examen/${ex.quiz_id}`} className="p-2 text-slate-300 hover:text-purple-600"><ChevronRight size={18} /></Link>}
+                <ResourceItem 
+                  key={ex.quiz_id} 
+                  variant="purple" 
+                  title={ex.titulo} 
+                  subtitle={`${ex.total_preguntas || 0} Preguntas`} 
+                  icon={HelpCircle}
+                  action={
+                    <div className="flex items-center gap-1">
+                      {rolId === 1 && (
+                        <button onClick={() => eliminarExamen(ex.quiz_id, ex.titulo)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                          <Trash2 size={18} />
+                        </button>
+                      )}
+                      <Link href={`/admin/editar-examen/${ex.quiz_id}`} className="p-2 text-slate-300 hover:text-purple-600 transition-colors">
+                        <ChevronRight size={18} />
+                      </Link>
+                    </div>
+                  }
                 />
               ))}
             </div>
@@ -191,13 +225,6 @@ useEffect(() => {
                 <StatCard icon={<Users size={20} className="text-purple-600"/>} label="Alumnos" value={stats.totalAlumnos} color="bg-purple-50" />
                 <StatCard icon={<CheckCircle size={20} className="text-green-600"/>} label="Finalización" value={`${stats.tasaCompletado}%`} color="bg-green-50" progress={stats.tasaCompletado} />
                 <StatCard icon={<BarChart3 size={20} className="text-orange-600"/>} label="Promedio Quiz" value={`${stats.promedioQuiz} pts`} color="bg-orange-50" />
-              </div>
-              
-              <div className="p-5 bg-blue-600 rounded-3xl text-white shadow-lg shadow-blue-100">
-                <p className="text-[10px] font-black uppercase text-blue-200 mb-1 tracking-widest">Nota de Instructor</p>
-                <p className="text-xs font-bold italic">
-                  {selectedAlumno !== 'global' ? `Visualizando métricas de: ${nombreAlumno}.` : "Visualizando métricas de todos los alumnos."}
-                </p>
               </div>
             </div>
           </SectionCard>
