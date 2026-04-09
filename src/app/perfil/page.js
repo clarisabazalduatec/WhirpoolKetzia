@@ -99,6 +99,11 @@ export default function PerfilPage() {
     router.refresh();
   };
 
+  const removerFoto = () => {
+    setFilePfp(null);
+    setPreviewPfp(null);
+  };
+
   const handleCrearGema = async () => {
     if (!nuevaGema.titulo.trim() || !nuevaGema.descripcion.trim()) return;
     setSavingGema(true);

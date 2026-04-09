@@ -54,9 +54,11 @@ export async function PUT(request) {
       return NextResponse.json({ message: 'Datos insuficientes' }, { status: 400 });
     }
 
+    // Usamos una asignación directa sin COALESCE para permitir que el usuario 
+    // "borre" (set null) su alias o su foto de perfil.
     await pool.query(
-      `UPDATE Usuarios SET alias = COALESCE(?, alias), pfp = COALESCE(?, pfp) WHERE usuario_id = ?`,
-      [alias || null, pfp || null, usuario_id]
+      `UPDATE Usuarios SET alias = ?, pfp = ? WHERE usuario_id = ?`,
+      [alias, pfp, usuario_id]
     );
 
     return NextResponse.json({ message: 'Perfil actualizado correctamente' });
