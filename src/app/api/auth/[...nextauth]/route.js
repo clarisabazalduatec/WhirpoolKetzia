@@ -4,6 +4,7 @@ import { pool } from "@/lib/db";
 
 const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,

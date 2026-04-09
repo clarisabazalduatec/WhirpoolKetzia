@@ -17,15 +17,22 @@ export default function LoginPage() {
 
   // Si hay sesión de Google activa, guardar en localStorage y redirigir
   useEffect(() => {
+  if (status === 'loading') return;
+  
   if (status === 'authenticated' && session?.user) {
-    localStorage.clear();
-    localStorage.setItem('usuario_id', session.user.usuario_id?.toString() || '');
-    localStorage.setItem('rol_id', session.user.rol_id?.toString() || '');
-    localStorage.setItem('nombre_usuario', session.user.name || '');
-    localStorage.setItem('usuario_pfp', session.user.pfp || '');
-    router.push('/');
+    const uid = session.user.usuario_id?.toString();
+    const rol = session.user.rol_id?.toString();
+    const nombre = session.user.name || '';
+
+    if (uid) {
+      localStorage.clear();
+      localStorage.setItem('usuario_id', uid);
+      localStorage.setItem('rol_id', rol || '2');
+      localStorage.setItem('nombre_usuario', nombre);
+      router.push('/');
+    }
   }
-}, [status]);
+}, [status, session]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -64,7 +71,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');
-    await signIn('google', { callbackUrl: '/login' , prompt: 'select_account' }); // ELIMINAR PROMPT SI SE DESEA QUE GOOGLE RECUERDE LA SESSION Y ENTRE AUTOMATICAMENTE
+    await signIn('google', { callbackUrl: '/', prompt: 'select_account', redirect: true }); // ELIMINAR PROMPT SI SE DESEA QUE GOOGLE RECUERDE LA SESSION Y ENTRE AUTOMATICAMENTE
   };
 
   return (
