@@ -61,3 +61,32 @@ export async function POST(request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function PUT(request) {
+  try {
+    const { publicacion_id, usuario_id, titulo, contenido } = await request.json();
+    // Validamos que el autor sea quien edita
+    const [res] = await pool.query(
+      'UPDATE Publicaciones SET titulo = ?, contenido = ? WHERE publicacion_id = ? AND usuario_id = ?',
+      [titulo, contenido, publicacion_id, usuario_id]
+    );
+    return NextResponse.json({ success: res.affectedRows > 0 });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  const uid = searchParams.get('uid');
+
+  try {
+    // Borramos likes asociados primero si no tienes ON DELETE CASCADE
+    await pool.query('DELETE FROM LikesPublicacion WHERE publicacion_id = ?', [id]);
+    const [res] = await pool.query('DELETE FROM Publicaciones WHERE publicacion_id = ? AND usuario_id = ?', [id, uid]);
+    return NextResponse.json({ success: res.affectedRows > 0 });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

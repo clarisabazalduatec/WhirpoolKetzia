@@ -67,3 +67,50 @@ export async function POST(request) {
     connection.release();
   }
 }
+
+
+export async function DELETE(request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+  if (!id) {
+    return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // 1. Eliminar referencias en Quiz_Curso (si las hay) para evitar errores de FK
+    await connection.query('DELETE FROM Quiz_Curso WHERE quiz_id = ?', [id]);
+
+    // 2. Eliminar de la tabla Quizzes
+    
+    // Opciones (nietos)
+    await connection.query(`
+      DELETE FROM Opciones 
+      WHERE pregunta_id IN (SELECT pregunta_id FROM Preguntas WHERE quiz_id = ?)
+    `, [id]);
+
+    // Preguntas (hijos)
+    await connection.query('DELETE FROM Preguntas WHERE quiz_id = ?', [id]);
+
+    // El Quiz (padre)
+    const [result] = await connection.query('DELETE FROM Quizzes WHERE quiz_id = ?', [id]);
+
+    if (result.affectedRows === 0) {
+      await connection.rollback();
+      return NextResponse.json({ error: 'Examen no encontrado' }, { status: 404 });
+    }
+
+    await connection.commit();
+    return NextResponse.json({ success: true, message: 'Examen eliminado correctamente' });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error("ERROR ELIMINANDO EXAMEN:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  } finally {
+    connection.release();
+  }
+}
