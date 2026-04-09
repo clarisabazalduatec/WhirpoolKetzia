@@ -17,15 +17,22 @@ export default function LoginPage() {
 
   // Si hay sesión de Google activa, guardar en localStorage y redirigir
   useEffect(() => {
+  if (status === 'loading') return;
+  
   if (status === 'authenticated' && session?.user) {
-    localStorage.clear();
-    localStorage.setItem('usuario_id', session.user.usuario_id?.toString() || '');
-    localStorage.setItem('rol_id', session.user.rol_id?.toString() || '');
-    localStorage.setItem('nombre_usuario', session.user.name || '');
-    localStorage.setItem('usuario_pfp', session.user.pfp || '');
-    router.push('/');
+    const uid = session.user.usuario_id?.toString();
+    const rol = session.user.rol_id?.toString();
+    const nombre = session.user.name || '';
+
+    if (uid) {
+      localStorage.clear();
+      localStorage.setItem('usuario_id', uid);
+      localStorage.setItem('rol_id', rol || '2');
+      localStorage.setItem('nombre_usuario', nombre);
+      router.push('/');
+    }
   }
-}, [status]);
+}, [status, session]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
