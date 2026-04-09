@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { pool } from "@/lib/db";
 
 const handler = NextAuth({
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -36,17 +37,20 @@ const handler = NextAuth({
     },
 
     async session({ session }) {
-      const [rows] = await pool.query(
-        'SELECT usuario_id, rol_id FROM Usuarios WHERE email = ?',
-        [session.user.email]
-      );
+      try {
+        const [rows] = await pool.query(
+          'SELECT usuario_id, rol_id FROM Usuarios WHERE email = ?',
+          [session.user.email]
+        );
 
-      if (rows.length > 0) {
-        session.user.usuario_id = rows[0].usuario_id;
-        session.user.rol_id = rows[0].rol_id;
+        if (rows.length > 0) {
+          session.user.usuario_id = rows[0].usuario_id;
+          session.user.rol_id = rows[0].rol_id;
+        }
+      } catch (error) {
+        console.error('Error al obtener sesión:', error);
       }
 
-      console.log("SESION GOOGLE:", session.user); // ← agrega esto
       return session;
     },
   },
