@@ -41,19 +41,33 @@ export async function DELETE(request) {
   }
 }
 
-// El POST se mantiene igual que antes...
-
 export async function POST(request) {
   try {
     const { usuario_id, curso_id } = await request.json();
     
+    // 1. Insertar la inscripción
     await pool.query(
       'INSERT INTO Inscripciones (usuario_id, curso_id, estado) VALUES (?, ?, "En curso")',
       [usuario_id, curso_id]
     );
 
+    // 2. Obtener el título del curso para el mensaje
+    const [cursoRows] = await pool.query(
+      'SELECT titulo FROM Cursos WHERE curso_id = ?',
+      [curso_id]
+    );
+    const tituloCurso = cursoRows[0]?.titulo || 'un nuevo curso';
+
+    // 3. Crear la notificación para el usuario asignado
+    const mensaje = `Has sido inscrito en el curso: "${tituloCurso}"`;
+    await pool.query(
+      'INSERT INTO Notificaciones (usuario_id, tipo, mensaje) VALUES (?, ?, ?)',
+      [usuario_id, 'inscripcion', mensaje]
+    );
+
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("Error asignando curso:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
