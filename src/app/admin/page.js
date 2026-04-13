@@ -1,15 +1,14 @@
 "use client";
-
+import Fuse from 'fuse.js';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Plus, BookOpen, ChevronRight, Loader2, ShieldCheck, 
   Trash2, Users, CheckCircle, BarChart3, TrendingUp, 
-  UserCircle, FileText, ExternalLink, HelpCircle 
+  UserCircle, FileText, ExternalLink, HelpCircle, Search
 } from 'lucide-react';
 import Link from 'next/link';
 
-// Importación de tus componentes reutilizables
 import { Button } from '@/components/Button';
 import { SectionCard } from '@/components/SectionCard';
 import { ResourceItem } from '@/components/ResourceItem';
@@ -27,7 +26,31 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({
     totalCursos: 0, totalAlumnos: 0, tasaCompletado: 0, promedioQuiz: 0
   });
-  
+
+  // Estados de búsqueda
+  const [searchCursos, setSearchCursos] = useState('');
+  const [searchMateriales, setSearchMateriales] = useState('');
+  const [searchExamenes, setSearchExamenes] = useState('');
+
+  // Búsqueda fonética con Fuse.js
+const cursosFiltrados = searchCursos.trim() === '' ? cursos : new Fuse(cursos, {
+  keys: ['titulo', 'descripcion', 'nombre_creador'],
+  threshold: 0.4,
+  ignoreLocation: true,
+}).search(searchCursos).map(r => r.item);
+
+const materialesFiltrados = searchMateriales.trim() === '' ? materiales : new Fuse(materiales, {
+  keys: ['nombre_archivo', 'tipo_archivo'],
+  threshold: 0.4,
+  ignoreLocation: true,
+}).search(searchMateriales).map(r => r.item);
+
+const examenesFiltrados = searchExamenes.trim() === '' ? examenes : new Fuse(examenes, {
+  keys: ['titulo'],
+  threshold: 0.4,
+  ignoreLocation: true,
+}).search(searchExamenes).map(r => r.item);
+
   const router = useRouter();
   const alumnoActual = alumnos.find(a => String(a.value) === String(selectedAlumno));
   const nombreAlumno = alumnoActual ? alumnoActual.label : "Seleccionado";
@@ -61,8 +84,6 @@ export default function AdminDashboard() {
     cargarDatos('global', true);
   }, [router]);
 
-  // --- FUNCIONES DE ELIMINACIÓN ---
-  
   const eliminarCurso = async (id, titulo) => {
     if (!window.confirm(`¿Eliminar curso "${titulo}"? Esta acción borrará inscripciones relacionadas.`)) return;
     const res = await fetch(`/api/admin/cursos/${id}`, { method: 'DELETE' });
@@ -97,9 +118,23 @@ export default function AdminDashboard() {
           {/* CURSOS */}
           <SectionCard 
             title="Catálogo Global" 
-            count={cursos.length} 
+            count={cursosFiltrados.length} 
             action={<Button href="/admin/nuevo-curso" icon={Plus}>Crear Curso</Button>}
           >
+            {/* Buscador cursos */}
+            <div className="px-4 pt-4">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                <input
+                  type="text"
+                  placeholder="Buscar curso..."
+                  value={searchCursos}
+                  onChange={(e) => setSearchCursos(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-medium"
+                />
+              </div>
+            </div>
+
             <div className="overflow-x-auto p-2">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -111,7 +146,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {cursos.map((curso) => (
+                  {cursosFiltrados.length > 0 ? cursosFiltrados.map((curso) => (
                     <tr key={curso.curso_id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-4">
@@ -135,7 +170,13 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-10 text-center">
+                        <Text variant="muted">No se encontraron cursos</Text>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -144,11 +185,25 @@ export default function AdminDashboard() {
           {/* MATERIALES */}
           <SectionCard 
             title="Biblioteca de Materiales" 
-            count={materiales.length} 
+            count={materialesFiltrados.length} 
             action={rolId === 1 ? <Button href="/admin/nuevo-material" variant="dark" icon={Plus}>Nuevo Material</Button> : null}
           >
+            {/* Buscador materiales */}
+            <div className="px-4 pt-4">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                <input
+                  type="text"
+                  placeholder="Buscar material..."
+                  value={searchMateriales}
+                  onChange={(e) => setSearchMateriales(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-medium"
+                />
+              </div>
+            </div>
+
             <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {materiales.length > 0 ? materiales.map((m) => (
+              {materialesFiltrados.length > 0 ? materialesFiltrados.map((m) => (
                 <ResourceItem 
                   key={m.archivo_id}
                   title={m.nombre_archivo}
@@ -167,14 +222,36 @@ export default function AdminDashboard() {
                     </div>
                   }
                 />
-              )) : <div className="col-span-full py-10 text-center"><Text variant="muted">No hay materiales</Text></div>}
+              )) : (
+                <div className="col-span-full py-10 text-center">
+                  <Text variant="muted">No se encontraron materiales</Text>
+                </div>
+              )}
             </div>
           </SectionCard>
 
           {/* EXÁMENES */}
-          <SectionCard title="Exámenes Disponibles" count={examenes.length} action={rolId === 1 ? <Button href="/admin/nuevo-examen" className="bg-purple-600 hover:bg-purple-700 shadow-purple-100" icon={Plus}>Crear Examen</Button> : null}>
+          <SectionCard 
+            title="Exámenes Disponibles" 
+            count={examenesFiltrados.length} 
+            action={rolId === 1 ? <Button href="/admin/nuevo-examen" className="bg-purple-600 hover:bg-purple-700 shadow-purple-100" icon={Plus}>Crear Examen</Button> : null}
+          >
+            {/* Buscador exámenes */}
+            <div className="px-4 pt-4">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                <input
+                  type="text"
+                  placeholder="Buscar examen..."
+                  value={searchExamenes}
+                  onChange={(e) => setSearchExamenes(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-medium"
+                />
+              </div>
+            </div>
+
             <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {examenes.map((ex) => (
+              {examenesFiltrados.length > 0 ? examenesFiltrados.map((ex) => (
                 <ResourceItem 
                   key={ex.quiz_id} 
                   variant="purple" 
@@ -194,7 +271,11 @@ export default function AdminDashboard() {
                     </div>
                   }
                 />
-              ))}
+              )) : (
+                <div className="col-span-full py-10 text-center">
+                  <Text variant="muted">No se encontraron exámenes</Text>
+                </div>
+              )}
             </div>
           </SectionCard>
         </div>
@@ -234,7 +315,6 @@ export default function AdminDashboard() {
   );
 }
 
-// Sub-componente interno para las stats
 function StatCard({ icon, label, value, color, progress }) {
   return (
     <div className="p-5 rounded-3xl border border-slate-50 bg-slate-50/30 hover:bg-white hover:shadow-md transition-all group">
