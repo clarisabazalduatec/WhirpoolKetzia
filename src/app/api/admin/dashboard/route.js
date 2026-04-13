@@ -11,7 +11,8 @@ export async function GET() {
         c.imagenSrc, 
         c.fecha_creacion,
         u.nombre AS nombre_creador,
-        c.descripcion
+        c.descripcion,
+        c.descripcionCorta
       FROM Cursos c
       LEFT JOIN Usuarios u ON c.creado_por = u.usuario_id
       ORDER BY c.fecha_creacion DESC

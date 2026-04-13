@@ -159,15 +159,13 @@ const examenesFiltrados = searchExamenes.trim() === '' ? examenes : new Fuse(exa
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-5"><Text variant="description">{curso.descripcion}</Text></td>
+                      <td className="px-6 py-5"><Text variant="description">{curso.descripcionCorta || curso.descripcion}</Text></td>
                       <td className="px-6 py-5"><Text>{curso.nombre_creador || 'Sistema'}</Text></td>
                       <td className="px-6 py-5 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {rolId === 1 && (
-                            <Button variant="danger" className="px-3 py-2.5 rounded-xl shadow-none" onClick={() => eliminarCurso(curso.curso_id, curso.titulo)} icon={Trash2} />
-                          )}
-                          <Button href={`/admin/gestionar/${curso.curso_id}`} variant="ghost">Gestionar</Button>
-                        </div>
+  <Button href={`/admin/gestionar/${curso.curso_id}`} variant="ghost">Alumnos</Button>
+  <Button href={`/admin/editar-curso/${curso.curso_id}`} variant="ghost">Editar</Button>
+</div>
                       </td>
                     </tr>
                   )) : (
