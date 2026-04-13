@@ -69,7 +69,7 @@ export default function Page() {
           Tablero
         </h1>
         <p className="text-slate-500 mt-1 md:mt-2 text-lg md:text-xl font-medium">
-          {obtenerSaludo()} {nombreUsuario || 'empleado'}, echa un vistazo a tus cursos.
+          {obtenerSaludo()} {nombreUsuario || 'empleado'}, echa un vistazo a tus cursos pendientes.
         </p>
       </header>
 
